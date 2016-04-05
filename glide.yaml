@@ -2,3 +2,6 @@ package: github.com/deis/k8s-claimer
 import:
 - package: github.com/kelseyhightower/envconfig
 - package: github.com/pborman/uuid
+- package: google.golang.org/cloud
+  subpackages:
+  - container

@@ -1,8 +1,12 @@
-hash: 369b0fa1c173f956b40994c1ed1c548910e2b183e59f9d77760176b50c579094
-updated: 2016-04-04T15:15:25.054304135-07:00
+hash: 577d99d1077d7b1c54edf29ae74e28d5993665b2d4d14e335a52b70f7ad15ecf
+updated: 2016-04-05T10:52:07.109194003-07:00
 imports:
 - name: github.com/kelseyhightower/envconfig
   version: cea086319492c3940683ea5e122aa5de70a33923
 - name: github.com/pborman/uuid
   version: c55201b036063326c5b1b89ccfe45a184973d073
+- name: google.golang.org/cloud
+  version: b1594faf9accbaecc2d63eaa1f5c5cdf7a5ea884
+  subpackages:
+  - container
 devImports: []
