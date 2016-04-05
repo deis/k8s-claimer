@@ -1,12 +1,22 @@
-hash: 577d99d1077d7b1c54edf29ae74e28d5993665b2d4d14e335a52b70f7ad15ecf
-updated: 2016-04-05T10:52:07.109194003-07:00
+hash: 1cd0a960433b5e45f789dbb07fd65eec80e7fdfad23c0663ba550c82e74b7c15
+updated: 2016-04-05T11:27:05.397370361-07:00
 imports:
 - name: github.com/kelseyhightower/envconfig
   version: cea086319492c3940683ea5e122aa5de70a33923
 - name: github.com/pborman/uuid
   version: c55201b036063326c5b1b89ccfe45a184973d073
-- name: google.golang.org/cloud
-  version: b1594faf9accbaecc2d63eaa1f5c5cdf7a5ea884
+- name: golang.org/x/net
+  version: 318395d8b12f5dd0f1b7cd0fbb95195f49acb0f9
   subpackages:
-  - container
+  - context
+- name: golang.org/x/oauth2
+  version: 33fa30fe45020622640e947917fd1fc4c81e3dce
+  subpackages:
+  - jwt
+  - internal
+  - jws
+- name: google.golang.org/api
+  version: 43c645d4bcf9251ced36c823a93b6d198764aae4
+  subpackages:
+  - container/v1
 devImports: []
