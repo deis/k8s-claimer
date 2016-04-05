@@ -21,4 +21,3 @@ either their lease duration expires or someone releases the lease with their UUI
 specifies the lease duration when they acquire it.
 
 For implementation details, see [the architecture document](doc/architecture.md)
->>>>>>> doc(README.md, doc): add design and architecture documents
