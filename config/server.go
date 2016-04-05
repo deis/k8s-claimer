@@ -6,8 +6,9 @@ import (
 
 // Server represents the envconfig-compatible server configuration
 type Server struct {
-	BindHost string `envconfig:"BIND_HOST" default:"0.0.0.0"`
-	BindPort int    `envconfig:"BIND_PORT" default:"8080"`
+	BindHost  string `envconfig:"BIND_HOST" default:"0.0.0.0"`
+	BindPort  int    `envconfig:"BIND_PORT" default:"8080"`
+	Namespace string `envconfig:"NAMESPACE" default:"k8s-claimer"`
 }
 
 // HostStr returns the full host string for the server, based on s.BindHost and s.BindPort
