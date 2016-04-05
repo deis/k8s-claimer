@@ -28,6 +28,9 @@ func (p PrivateKey) Bytes() []byte {
 	return []byte(p.String())
 }
 
+// Note: getJWTConf, getOAuthClient and GetContainerService are inspired by code in
+// https://github.com/hashicorp/terraform/blob/master/builtin/providers/google/config.go
+
 func getJWTConf(email string, pk PrivateKey) *jwt.Config {
 	return &jwt.Config{
 		Email:      email,
