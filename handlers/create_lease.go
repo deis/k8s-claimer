@@ -8,6 +8,7 @@ import (
 	"github.com/deis/k8s-claimer/htp"
 	"github.com/pborman/uuid"
 	container "google.golang.org/api/container/v1"
+	k8s "k8s.io/kubernetes/pkg/client/unversioned"
 )
 
 type createLeaseReq struct {
@@ -25,7 +26,7 @@ func (c createLeaseReq) maxTimeDur() time.Duration {
 }
 
 // CreateLease creates the handler that responds to the POST /lease endpoint
-func CreateLease(containerService *container.Service) http.Handler {
+func CreateLease(containerService *container.Service, services k8s.ServiceInterface) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		req := new(createLeaseReq)
 		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
