@@ -13,7 +13,7 @@ import (
 )
 
 func TestCreateLeaseInvalidReq(t *testing.T) {
-	hdl := CreateLease(nil)
+	hdl := CreateLease(nil, nil)
 	req, err := http.NewRequest("POST", "/lease", bytes.NewReader(nil))
 	assert.NoErr(t, err)
 	res := httptest.NewRecorder()
@@ -22,7 +22,7 @@ func TestCreateLeaseInvalidReq(t *testing.T) {
 }
 
 func TestCreateLeaseValidResp(t *testing.T) {
-	hdl := CreateLease(nil)
+	hdl := CreateLease(nil, nil)
 	reqBody := `{"max_time":30}`
 	req, err := http.NewRequest("POST", "/lease", strings.NewReader(reqBody))
 	assert.NoErr(t, err)

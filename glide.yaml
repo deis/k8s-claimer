@@ -5,3 +5,5 @@ import:
 - package: google.golang.org/api
   subpackages:
   - container/v1
+- package: k8s.io/kubernetes
+  version: ~1.2

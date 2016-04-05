@@ -9,7 +9,7 @@ import (
 )
 
 func TestDeleteLease(t *testing.T) {
-	hdl := DeleteLease()
+	hdl := DeleteLease(nil)
 	req, err := http.NewRequest("DELETE", "/lease", nil)
 	assert.NoErr(t, err)
 	res := httptest.NewRecorder()
