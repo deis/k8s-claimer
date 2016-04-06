@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"github.com/deis/k8s-claimer/clusters"
+	"github.com/deis/k8s-claimer/leases"
 	container "google.golang.org/api/container/v1"
 )
 
@@ -14,10 +16,11 @@ func (e errNoClusterWithName) Error() string {
 
 // findUnusedGKECluster finds a GKE cluster that's not currently in use according to the
 // annotations in svc. returns errUnusedGKEClusterNotFound if none is found
-func findUnusedGKECluster(clusterSet clusterSet, annotations map[string]string) (*container.Cluster, error) {
-	existingLeases := getLeasesFromAnnotations(annotations)
-	for clusterName, cluster := range clusterSet {
-		_, found := existingLeases[clusterName]
+func findUnusedGKECluster(clusterMap *clusters.Map, leaseMap *leases.Map) (*container.Cluster, error) {
+	clusterNames := clusterMap.Names()
+	for _, clusterName := range clusterNames {
+		cluster, _ := clusterMap.ClusterByName(clusterName)
+		_, found := leaseMap.LeaseByClusterName(clusterName)
 		if !found {
 			return cluster, nil
 		}
@@ -26,15 +29,6 @@ func findUnusedGKECluster(clusterSet clusterSet, annotations map[string]string) 
 }
 
 func createKubeConfigFromCluster(cluster *container.Cluster) string {
+	// TODO: implement
 	return ""
-}
-
-// findClusterByName finds the cluster of the given name in clusterName. returns nil and an
-// errNoClusterWithName error if no cluster with the given name was found
-func findClusterByName(clusterName string, clusterSet clusterSet) (*container.Cluster, error) {
-	cluster, found := clusterSet.getByName(clusterName)
-	if !found {
-		return nil, errNoClusterWithName{name: clusterName}
-	}
-	return cluster, nil
 }

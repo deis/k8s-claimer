@@ -1,14 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
-	"strings"
 	"time"
-)
 
-const (
-	timeFormat = time.RFC3339
+	"github.com/deis/k8s-claimer/leases"
+	"k8s.io/kubernetes/pkg/api"
+	k8s "k8s.io/kubernetes/pkg/client/unversioned"
 )
 
 var (
@@ -16,36 +14,27 @@ var (
 	errNoExpiredLeases          = errors.New("no expired leases exist")
 )
 
-type leaseAnnotationValue struct {
-	ClusterName         string `json:"cluster_name"`
-	LeaseExpirationTime string `json:"lease_expiration_time"`
-}
-
-func getLeasesFromAnnotations(annotations map[string]string) map[string]*leaseAnnotationValue {
-	ret := make(map[string]*leaseAnnotationValue)
-	for clusterName, annoValStr := range annotations {
-		annoVal := new(leaseAnnotationValue)
-		if err := json.NewDecoder(strings.NewReader(annoValStr)).Decode(annoVal); err != nil {
-			continue
-		}
-		ret[clusterName] = annoVal
-	}
-	return ret
-}
-
 // findExpiredLease searches in the leases in the svc annotations and returns the cluster name of
 // the first expired lease it finds. If none found, returns an empty string and errNoExpiredLeases
-func findExpiredLease(annotations map[string]string) (string, error) {
-	leases := getLeasesFromAnnotations(annotations)
+func findExpiredLease(leaseMap *leases.Map) (*leases.UUIDAndLease, error) {
 	now := time.Now()
-	for _, leaseInfo := range leases {
-		exprTime, err := time.Parse(timeFormat, leaseInfo.LeaseExpirationTime)
+	uuids, err := leaseMap.UUIDs()
+	if err != nil {
+		return nil, err
+	}
+	for _, u := range uuids {
+		lease, _ := leaseMap.LeaseForUUID(u)
+		exprTime, err := lease.ExpirationTime()
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		if exprTime.Before(now) {
-			return leaseInfo.ClusterName, nil
+		if now.After(exprTime) {
+			return leases.NewUUIDAndLease(u, lease), nil
 		}
 	}
-	return "", errNoExpiredLeases
+	return nil, errNoExpiredLeases
+}
+
+func saveAnnotation(services k8s.ServiceInterface, svc *api.Service, leaseMap *leases.Map) error {
+	return nil
 }
