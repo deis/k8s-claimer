@@ -58,6 +58,7 @@ func (m Map) UUIDs() ([]uuid.UUID, error) {
 		if u == nil {
 			return nil, ErrMalformedUUID{uuidStr: uuidStr}
 		}
+		ret[i] = u
 		i++
 	}
 	return ret, nil
