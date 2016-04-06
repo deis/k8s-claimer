@@ -93,7 +93,7 @@ func CreateLease(
 		leaseMap.DeleteLease(uuidAndLease.UUID)
 		leaseMap.CreateLease(newToken, leases.NewLease(availableCluster.Name, req.expirationTime(time.Now())))
 
-		if err := saveAnnotation(services, svc, leaseMap); err != nil {
+		if err := saveAnnotations(services, svc, leaseMap); err != nil {
 			htp.Error(w, http.StatusInternalServerError, "error saving new lease to Kubernetes annotations (%s)", err)
 			return
 		}

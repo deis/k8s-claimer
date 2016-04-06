@@ -1,6 +1,9 @@
 package leases
 
 import (
+	"bytes"
+	"encoding/json"
+
 	"github.com/pborman/uuid"
 )
 
@@ -87,4 +90,18 @@ func (m *Map) DeleteLease(u uuid.UUID) bool {
 	delete(m.uuidMap, u.String())
 	delete(m.nameMap, lease.ClusterName)
 	return true
+}
+
+// ToAnnotations returns a raw map[string]string of lease tokens and json-encoded leases. This map is
+// suitable for use in Kubernetes annotations, and will be parseable by ParseMapFromAnnotations
+func (m *Map) ToAnnotations() (map[string]string, error) {
+	ret := make(map[string]string)
+	for token, lease := range m.uuidMap {
+		buf := new(bytes.Buffer)
+		if err := json.NewEncoder(buf).Encode(lease); err != nil {
+			return map[string]string{}, err
+		}
+		ret[token] = string(buf.Bytes())
+	}
+	return ret, nil
 }

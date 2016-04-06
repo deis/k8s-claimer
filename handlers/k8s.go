@@ -35,6 +35,11 @@ func findExpiredLease(leaseMap *leases.Map) (*leases.UUIDAndLease, error) {
 	return nil, errNoExpiredLeases
 }
 
-func saveAnnotation(services k8s.ServiceInterface, svc *api.Service, leaseMap *leases.Map) error {
-	return nil
+func saveAnnotations(services k8s.ServiceInterface, svc *api.Service, leaseMap *leases.Map) error {
+	svc.Annotations, err = leaseMap.ToAnnotations()
+	if err != nil {
+		return err
+	}
+	_, err := services.Update(svc)
+	return err
 }
