@@ -7,6 +7,8 @@ import (
 	"github.com/pborman/uuid"
 )
 
+// Map holds an in-memory representation of the set of leases written to k8s annotations.
+// It can look up leases by lease token (which is a UUID) or cluster name
 type Map struct {
 	// mapping from uuid to lease. this map is what's stored in the k8s annotation
 	uuidMap map[string]*Lease
