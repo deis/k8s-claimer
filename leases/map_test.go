@@ -6,25 +6,12 @@ import (
 	"time"
 
 	"github.com/arschles/assert"
+	"github.com/deis/k8s-claimer/testutil"
 	"github.com/pborman/uuid"
 )
 
-func getClusterNames() []string {
-	return []string{"cluster1", "cluster2", "cluster3", "cluster4"}
-}
-
-func getRawAnnotations(clusterNames []string) map[string]string {
-	ret := make(map[string]string)
-	i := 0
-	for _, clusterName := range clusterNames {
-		ret[uuid.New()] = leaseJSON(clusterName, time.Now().Add(time.Duration(i)*time.Second))
-		i++
-	}
-	return ret
-}
-
 func TestParseMapFromAnnotations(t *testing.T) {
-	rawAnnotations := getRawAnnotations(getClusterNames())
+	rawAnnotations := testutil.GetRawAnnotations(testutil.GetClusterNames(), timeFormat)
 	m, err := ParseMapFromAnnotations(rawAnnotations)
 	assert.NoErr(t, err)
 	for name, uuid := range m.nameMap {
@@ -35,8 +22,8 @@ func TestParseMapFromAnnotations(t *testing.T) {
 }
 
 func TestLeaseByClusterName(t *testing.T) {
-	clusterNames := getClusterNames()
-	rawAnnotations := getRawAnnotations(clusterNames)
+	clusterNames := testutil.GetClusterNames()
+	rawAnnotations := testutil.GetRawAnnotations(clusterNames, timeFormat)
 	m, err := ParseMapFromAnnotations(rawAnnotations)
 	assert.NoErr(t, err)
 	l, found := m.LeaseByClusterName("no such cluster")
@@ -50,7 +37,7 @@ func TestLeaseByClusterName(t *testing.T) {
 }
 
 func TestUUIDs(t *testing.T) {
-	rawAnnotations := getRawAnnotations(getClusterNames())
+	rawAnnotations := testutil.GetRawAnnotations(testutil.GetClusterNames(), timeFormat)
 	m, err := ParseMapFromAnnotations(rawAnnotations)
 	assert.NoErr(t, err)
 	uuids, err := m.UUIDs()
@@ -63,8 +50,8 @@ func TestUUIDs(t *testing.T) {
 }
 
 func TestCreateDeleteLease(t *testing.T) {
-	clusterNames := getClusterNames()
-	rawAnnotations := getRawAnnotations(clusterNames)
+	clusterNames := testutil.GetClusterNames()
+	rawAnnotations := testutil.GetRawAnnotations(clusterNames, timeFormat)
 	m, err := ParseMapFromAnnotations(rawAnnotations)
 	assert.NoErr(t, err)
 

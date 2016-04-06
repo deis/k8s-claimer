@@ -1,25 +1,21 @@
 package leases
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/arschles/assert"
+	"github.com/deis/k8s-claimer/testutil"
 )
 
 const (
 	clusterName = "my test cluster"
 )
 
-func leaseJSON(clusterName string, exprTime time.Time) string {
-	return fmt.Sprintf(`{"cluster_name":"%s", "lease_expiration_time":"%s"}`, clusterName, exprTime.Format(timeFormat))
-}
-
 func TestParseLease(t *testing.T) {
 	tme := time.Now()
 	tStr := tme.Format(timeFormat)
-	jsonStr := leaseJSON(clusterName, tme)
+	jsonStr := testutil.LeaseJSON(clusterName, tme, timeFormat)
 	lease, err := ParseLease(jsonStr)
 	assert.NoErr(t, err)
 	assert.Equal(t, lease.ClusterName, clusterName, "cluster name")
