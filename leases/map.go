@@ -71,8 +71,9 @@ func (m Map) LeaseForUUID(u uuid.UUID) (*Lease, bool) {
 	return l, ok
 }
 
-// CreateLease attempts to set the given lease under the given uuid. If u already existed, does
-// nothing and returns false. Otherwise sets the value and returns true
+// CreateLease attempts to set the given lease under the given uuid. If u already existed or
+// l.ClusterName otherwise already has a lease associated with it, does nothing and returns false.
+// Otherwise adds the lease to the map and returns true
 func (m *Map) CreateLease(u uuid.UUID, l *Lease) bool {
 	if _, found := m.uuidMap[u.String()]; found {
 		return false
