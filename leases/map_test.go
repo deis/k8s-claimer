@@ -11,7 +11,12 @@ import (
 )
 
 func TestParseMapFromAnnotations(t *testing.T) {
-	rawAnnotations := testutil.GetRawAnnotations(testutil.GetClusterNames(), timeFormat)
+	rawAnnotations := testutil.GetRawAnnotations(
+		testutil.GetClusterNames(),
+		TimeFormat,
+		testutil.DefaultTimeFunc,
+		testutil.DefaultUUIDFunc,
+	)
 	m, err := ParseMapFromAnnotations(rawAnnotations)
 	assert.NoErr(t, err)
 	for name, uuid := range m.nameMap {
@@ -23,7 +28,12 @@ func TestParseMapFromAnnotations(t *testing.T) {
 
 func TestLeaseByClusterName(t *testing.T) {
 	clusterNames := testutil.GetClusterNames()
-	rawAnnotations := testutil.GetRawAnnotations(clusterNames, timeFormat)
+	rawAnnotations := testutil.GetRawAnnotations(
+		clusterNames,
+		TimeFormat,
+		testutil.DefaultTimeFunc,
+		testutil.DefaultUUIDFunc,
+	)
 	m, err := ParseMapFromAnnotations(rawAnnotations)
 	assert.NoErr(t, err)
 	l, found := m.LeaseByClusterName("no such cluster")
@@ -37,7 +47,12 @@ func TestLeaseByClusterName(t *testing.T) {
 }
 
 func TestUUIDs(t *testing.T) {
-	rawAnnotations := testutil.GetRawAnnotations(testutil.GetClusterNames(), timeFormat)
+	rawAnnotations := testutil.GetRawAnnotations(
+		testutil.GetClusterNames(),
+		TimeFormat,
+		testutil.DefaultTimeFunc,
+		testutil.DefaultUUIDFunc,
+	)
 	m, err := ParseMapFromAnnotations(rawAnnotations)
 	assert.NoErr(t, err)
 	uuids, err := m.UUIDs()
@@ -51,7 +66,12 @@ func TestUUIDs(t *testing.T) {
 
 func TestCreateDeleteLease(t *testing.T) {
 	clusterNames := testutil.GetClusterNames()
-	rawAnnotations := testutil.GetRawAnnotations(clusterNames, timeFormat)
+	rawAnnotations := testutil.GetRawAnnotations(
+		clusterNames,
+		TimeFormat,
+		testutil.DefaultTimeFunc,
+		testutil.DefaultUUIDFunc,
+	)
 	m, err := ParseMapFromAnnotations(rawAnnotations)
 	assert.NoErr(t, err)
 

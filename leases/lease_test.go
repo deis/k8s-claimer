@@ -14,8 +14,8 @@ const (
 
 func TestParseLease(t *testing.T) {
 	tme := time.Now()
-	tStr := tme.Format(timeFormat)
-	jsonStr := testutil.LeaseJSON(clusterName, tme, timeFormat)
+	tStr := tme.Format(TimeFormat)
+	jsonStr := testutil.LeaseJSON(clusterName, tme, TimeFormat)
 	lease, err := ParseLease(jsonStr)
 	assert.NoErr(t, err)
 	assert.Equal(t, lease.ClusterName, clusterName, "cluster name")
@@ -26,7 +26,7 @@ func TestNewLease(t *testing.T) {
 	tme := time.Now()
 	l := NewLease(clusterName, tme)
 	assert.Equal(t, l.ClusterName, clusterName, "cluster name")
-	assert.Equal(t, l.LeaseExpirationTime, tme.Format(timeFormat), "lease expiration time")
+	assert.Equal(t, l.LeaseExpirationTime, tme.Format(TimeFormat), "lease expiration time")
 }
 
 func TestExpirationTime(t *testing.T) {
@@ -34,7 +34,7 @@ func TestExpirationTime(t *testing.T) {
 	l := NewLease(clusterName, tme)
 	ex, err := l.ExpirationTime()
 	assert.NoErr(t, err)
-	assert.Equal(t, ex.Format(timeFormat), tme.Format(timeFormat), "expiration time")
+	assert.Equal(t, ex.Format(TimeFormat), tme.Format(TimeFormat), "expiration time")
 
 	l = &Lease{ClusterName: clusterName, LeaseExpirationTime: "invalid expiration time"}
 	ex, err = l.ExpirationTime()

@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	timeFormat = time.RFC3339
+	TimeFormat = time.RFC3339
 )
 
 var (
@@ -24,7 +24,7 @@ type Lease struct {
 func NewLease(clusterName string, exprTime time.Time) *Lease {
 	return &Lease{
 		ClusterName:         clusterName,
-		LeaseExpirationTime: exprTime.Format(timeFormat),
+		LeaseExpirationTime: exprTime.Format(TimeFormat),
 	}
 }
 
@@ -42,7 +42,7 @@ func ParseLease(leaseStr string) (*Lease, error) {
 // formed time string, returns the time and nil. Otherwise returns the zero value of time
 // (i.e. t.IsZero() will return true) and a non-nil error
 func (l Lease) ExpirationTime() (time.Time, error) {
-	t, err := time.Parse(timeFormat, l.LeaseExpirationTime)
+	t, err := time.Parse(TimeFormat, l.LeaseExpirationTime)
 	if err != nil {
 		return zeroTime, err
 	}
