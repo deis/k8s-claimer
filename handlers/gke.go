@@ -1,18 +1,16 @@
 package handlers
 
 import (
+	"errors"
+
 	"github.com/deis/k8s-claimer/clusters"
 	"github.com/deis/k8s-claimer/leases"
 	container "google.golang.org/api/container/v1"
 )
 
-type errNoClusterWithName struct {
-	name string
-}
-
-func (e errNoClusterWithName) Error() string {
-	return "no cluster with name " + e.name
-}
+var (
+	errUnusedGKEClusterNotFound = errors.New("all GKE clusters are in use")
+)
 
 // findUnusedGKECluster finds a GKE cluster that's not currently in use according to the
 // annotations in svc. returns errUnusedGKEClusterNotFound if none is found

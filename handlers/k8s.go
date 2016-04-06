@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	errUnusedGKEClusterNotFound = errors.New("unused GKE cluster not found")
-	errNoExpiredLeases          = errors.New("no expired leases exist")
+	errNoExpiredLeases = errors.New("no expired leases exist")
 )
 
 // findExpiredLease searches in the leases in the svc annotations and returns the cluster name of
