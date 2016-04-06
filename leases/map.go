@@ -78,6 +78,9 @@ func (m *Map) CreateLease(u uuid.UUID, l *Lease) bool {
 	if _, found := m.uuidMap[u.String()]; found {
 		return false
 	}
+	if _, found := m.nameMap[l.ClusterName]; found {
+		return false
+	}
 	m.uuidMap[u.String()] = l
 	m.nameMap[l.ClusterName] = u
 	return true
