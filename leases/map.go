@@ -1,7 +1,6 @@
 package leases
 
 import (
-	"bytes"
 	"encoding/json"
 
 	"github.com/pborman/uuid"
@@ -99,11 +98,11 @@ func (m *Map) DeleteLease(u uuid.UUID) bool {
 func (m *Map) ToAnnotations() (map[string]string, error) {
 	ret := make(map[string]string)
 	for token, lease := range m.uuidMap {
-		buf := new(bytes.Buffer)
-		if err := json.NewEncoder(buf).Encode(lease); err != nil {
+		leaseBytes, err := json.Marshal(lease)
+		if err != nil {
 			return map[string]string{}, err
 		}
-		ret[token] = string(buf.Bytes())
+		ret[token] = string(leaseBytes)
 	}
 	return ret, nil
 }
