@@ -4,9 +4,9 @@ import (
 	"errors"
 	"time"
 
+	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"k8s.io/kubernetes/pkg/api"
-	k8s "k8s.io/kubernetes/pkg/client/unversioned"
 )
 
 var (
@@ -35,11 +35,14 @@ func findExpiredLease(leaseMap *leases.Map) (*leases.UUIDAndLease, error) {
 	return nil, errNoExpiredLeases
 }
 
-func saveAnnotations(services k8s.ServiceInterface, svc *api.Service, leaseMap *leases.Map) error {
-	svc.Annotations, err = leaseMap.ToAnnotations()
+func saveAnnotations(services k8s.ServiceUpdater, svc *api.Service, leaseMap *leases.Map) error {
+	annos, err := leaseMap.ToAnnotations()
 	if err != nil {
 		return err
 	}
-	_, err := services.Update(svc)
-	return err
+	svc.Annotations = annos
+	if _, err := services.Update(svc); err != nil {
+		return err
+	}
+	return nil
 }

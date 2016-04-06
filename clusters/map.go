@@ -1,6 +1,7 @@
 package clusters
 
 import (
+	"github.com/deis/k8s-claimer/gke"
 	container "google.golang.org/api/container/v1"
 )
 
@@ -9,18 +10,22 @@ type Map struct {
 	nameMap map[string]*container.Cluster
 }
 
+func clustersToMap(c []*container.Cluster) map[string]*container.Cluster {
+	ret := make(map[string]*container.Cluster)
+	for _, cluster := range c {
+		ret[cluster.Name] = cluster
+	}
+	return ret
+}
+
 // ParseMapFromGKE calls the GKE API to get a list of clusters, then returns a map representation
 // of those clusters. Returns nil and an appropriate error if any errors occurred along the way
-func ParseMapFromGKE(containerSvc *container.Service, projID, zone string) (*Map, error) {
-	ret := make(map[string]*container.Cluster)
-	clustersResp, err := containerSvc.Projects.Zones.Clusters.List(projID, zone).Do()
+func ParseMapFromGKE(clusterLister gke.ClusterLister, projID, zone string) (*Map, error) {
+	clustersResp, err := clusterLister.List(projID, zone)
 	if err != nil {
 		return nil, err
 	}
-	for _, cluster := range clustersResp.Clusters {
-		ret[cluster.Name] = cluster
-	}
-	return &Map{nameMap: ret}, nil
+	return &Map{nameMap: clustersToMap(clustersResp.Clusters)}, nil
 }
 
 // ClusterByName returns the cluster of the given cluster name. Returns nil and false if no

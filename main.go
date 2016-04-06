@@ -45,7 +45,7 @@ func main() {
 	mux := http.NewServeMux()
 	leaseHandler := htp.MethodMux(map[htp.Method]http.Handler{
 		htp.Post: handlers.CreateLease(
-			containerService,
+			gke.NewGKEClusterLister(containerService),
 			services,
 			serverConf.Namespace,
 			gCloudConf.ProjectID,

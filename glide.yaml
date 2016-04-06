@@ -7,3 +7,4 @@ import:
   - container/v1
 - package: k8s.io/kubernetes
   version: ~1.2
+- package: github.com/arschles/assert

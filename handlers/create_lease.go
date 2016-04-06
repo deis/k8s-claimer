@@ -6,11 +6,12 @@ import (
 	"time"
 
 	"github.com/deis/k8s-claimer/clusters"
+	"github.com/deis/k8s-claimer/gke"
 	"github.com/deis/k8s-claimer/htp"
+	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/pborman/uuid"
 	container "google.golang.org/api/container/v1"
-	k8s "k8s.io/kubernetes/pkg/client/unversioned"
 )
 
 type createLeaseReq struct {
@@ -33,8 +34,8 @@ func (c createLeaseReq) expirationTime(start time.Time) time.Time {
 
 // CreateLease creates the handler that responds to the POST /lease endpoint
 func CreateLease(
-	containerService *container.Service,
-	services k8s.ServiceInterface,
+	clusterLister gke.ClusterLister,
+	services k8s.ServiceGetterUpdater,
 	k8sServiceName,
 	gCloudProjID,
 	gCloudZone string,
@@ -53,7 +54,7 @@ func CreateLease(
 			return
 		}
 
-		clusterMap, err := clusters.ParseMapFromGKE(containerService, gCloudProjID, gCloudZone)
+		clusterMap, err := clusters.ParseMapFromGKE(clusterLister, gCloudProjID, gCloudZone)
 		if err != nil {
 			htp.Error(w, http.StatusInternalServerError, "error fetching GKE clusters (%s)", err)
 			return
