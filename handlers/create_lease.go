@@ -8,7 +8,6 @@ import (
 	"github.com/deis/k8s-claimer/htp"
 	"github.com/pborman/uuid"
 	container "google.golang.org/api/container/v1"
-	"k8s.io/kubernetes/pkg/api"
 	k8s "k8s.io/kubernetes/pkg/client/unversioned"
 )
 
@@ -48,19 +47,36 @@ func CreateLease(
 			return
 		}
 
-		gkeClusters, err := getGKEClusters(containerService, projID, zone)
+		clusters, err := clusterSetFromGKE(containerService, gCloudProjID, gCloudZone)
 		if err != nil {
-			htp.Error(w, http.StatusInternalServerError, "error listing GKE clusters (%s)", err)
+			htp.Error(w, http.StatusInternalServerError, "error fetching GKE clusters (%s)", err)
 		}
 
-		unusedCluster, err := findUnusedGKECluster(gkeClusters, svc)
-		if err != nil {
-			htp.Error(w, http.StatusConflict, "un-leased cluster not found")
+		unusedCluster, unusedClusterErr := findUnusedGKECluster(clusters, svc.Annotations)
+		expiredLeaseClusterName, expiredLeaseErr := findExpiredLease(svc.Annotations)
+		if unusedClusterErr != nil && expiredLeaseErr != nil {
+			htp.Error(w, http.StatusConflict, "no available or expired clusters found")
+			return
+		}
+		var availableCluster *container.Cluster
+		if unusedCluster == nil {
+			availableCluster = unusedCluster
+		}
+		if expiredLeaseErr == nil {
+			cl, err := findClusterByName(expiredLeaseClusterName, clusters)
+			if err != nil {
+				htp.Error(w, http.StatusNotFound, "cluster %s has an expired lease but does not exist in GKE", expiredLeaseClusterName)
+				return
+			}
+			availableCluster = cl
 		}
 
-		// findExpiredLease(...)
-
-		resp := createLeaseResp{KubeConfig: "", IP: "", Token: uuid.New()}
+		resp := createLeaseResp{
+			KubeConfig: createKubeConfigFromCluster(availableCluster),
+			IP:         availableCluster.Endpoint,
+			Token:      uuid.New(),
+		}
+		// TODO: save annotation to k8s
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			htp.Error(w, http.StatusInternalServerError, "error encoding json (%s)", err)
 			return
