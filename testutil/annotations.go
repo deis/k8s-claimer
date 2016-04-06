@@ -28,7 +28,7 @@ func GetRawAnnotations(
 	ret := make(map[string]string)
 	i := 0
 	for _, clusterName := range clusterNames {
-		ret[uuid.New()] = LeaseJSON(clusterName, timeFunc(i), timeFmt)
+		ret[uuidFunc(i).String()] = LeaseJSON(clusterName, timeFunc(i), timeFmt)
 		i++
 	}
 	return ret
