@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/arschles/assert"
@@ -10,6 +11,8 @@ import (
 	"github.com/deis/k8s-claimer/testutil"
 	"github.com/pborman/uuid"
 	container "google.golang.org/api/container/v1"
+	yaml "gopkg.in/yaml.v2"
+	k8scmd "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
 )
 
 const (
@@ -61,4 +64,43 @@ func TestFindUnusedGKECluster(t *testing.T) {
 	unusedCluster, err = findUnusedGKECluster(clusterMap, leaseMap)
 	assert.NoErr(t, err)
 	assert.Equal(t, unusedCluster.Name, freedLease.ClusterName, "free cluster name")
+}
+
+func TestCreateKubeConfigFromCluster(t *testing.T) {
+	cluster := &container.Cluster{
+		Name:     "my cluster",
+		Endpoint: "https://my.k8s.endpoint.com",
+		MasterAuth: &container.MasterAuth{
+			ClientCertificate:    "test client cert",
+			ClientKey:            "test client key",
+			ClusterCaCertificate: "test cluster CA",
+			Password:             "test password",
+			Username:             "test username",
+		},
+	}
+	kubeConfigBytes, err := createKubeConfigFromCluster(cluster)
+	assert.NoErr(t, err)
+	k8sConfig := new(k8scmd.Config)
+	assert.NoErr(t, yaml.Unmarshal(kubeConfigBytes, k8sConfig))
+	assert.Equal(t, k8sConfig.APIVersion, "v1", "api version")
+	assert.Equal(t, k8sConfig.CurrentContext, strings.ToLower(cluster.Name), "context")
+
+	clusterConfig, clusterConfigFound := k8sConfig.Clusters[cluster.Name]
+	assert.True(t, clusterConfigFound, "cluster %s not found in config", cluster.Name)
+	assert.Equal(t, clusterConfig.Server, cluster.Endpoint, "cluster endpoint")
+	assert.Equal(t, string(clusterConfig.CertificateAuthorityData), cluster.MasterAuth.ClusterCaCertificate, "cluster CA data")
+
+	authInfoConfig, authInfoFound := k8sConfig.AuthInfos[strings.ToLower(cluster.Name)]
+	assert.True(t, authInfoFound, "auth info for cluster %s not found in config", cluster.Name)
+	assert.Equal(t, string(authInfoConfig.ClientCertificateData), cluster.MasterAuth.ClientCertificate, "client certificate")
+	assert.Equal(t, string(authInfoConfig.ClientKeyData), cluster.MasterAuth.ClientKey, "client key")
+	assert.Equal(t, authInfoConfig.Username, cluster.MasterAuth.Username, "username")
+	assert.Equal(t, authInfoConfig.Password, cluster.MasterAuth.Password, "password")
+
+	contextConfig, contextFound := k8sConfig.Contexts[strings.ToLower(cluster.Name)]
+	assert.True(t, contextFound, "context for cluster %s not found in config", cluster.Name)
+	_, clusterFoundFromContext := k8sConfig.Clusters[contextConfig.Cluster]
+	assert.True(t, clusterFoundFromContext, "cluster not found from context.Cluster value %s", contextConfig.Cluster)
+	_, authFoundFromContext := k8sConfig.AuthInfos[contextConfig.AuthInfo]
+	assert.True(t, authFoundFromContext, "auth info not found from context.AuthInfo value %s", contextConfig.AuthInfo)
 }
