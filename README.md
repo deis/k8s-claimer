@@ -1,5 +1,8 @@
 # k8s-claimer
 
+[![Build Status](https://travis-ci.org/deis/k8s-claimer.svg?branch=master)](https://travis-ci.org/deis/k8s-claimer)
+[![Go Report Card](http://goreportcard.com/badge/deis/k8s-claimer)](http://goreportcard.com/report/deis/k8s-claimer)
+
 `k8s-claimer` is a leasing server for a pool of Kubernetes clusters. It will be used as part of our
 [deis-workflow end-to-end test](https://github.com/deis/workflow-e2e) infrastructure.
 
