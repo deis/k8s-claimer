@@ -24,3 +24,4 @@ _testmain.go
 *.prof
 vendor
 k8s-claimer
+rootfs/bin
