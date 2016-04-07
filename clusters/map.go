@@ -18,7 +18,7 @@ func clustersToMap(c []*container.Cluster) map[string]*container.Cluster {
 	return ret
 }
 
-// ParseMapFromGKE calls the GKE API to get a list of clusters, then returns a map representation
+// ParseMapFromGKE calls the GKE API to get a list of clusters, then returns a Map representation
 // of those clusters. Returns nil and an appropriate error if any errors occurred along the way
 func ParseMapFromGKE(clusterLister gke.ClusterLister, projID, zone string) (*Map, error) {
 	clustersResp, err := clusterLister.List(projID, zone)
