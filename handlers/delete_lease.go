@@ -33,6 +33,8 @@ func DeleteLease(services k8s.ServiceGetterUpdater, k8sServiceName string) http.
 			htp.Error(w, http.StatusInternalServerError, "error getting annotations for the %s service (%s)", k8sServiceName, err)
 			return
 		}
+		// blow away the lease, regardless of whether it's expired or not. the create endpoint deletes
+		// the lease from annotations, replacing the lease for a cluster with a new UUID anyway
 		deleted := leaseMap.DeleteLease(leaseToken)
 		if !deleted {
 			htp.Error(w, http.StatusConflict, "lease %s doesn't exist", leaseToken)
