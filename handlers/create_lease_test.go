@@ -10,24 +10,8 @@ import (
 
 	"github.com/arschles/assert"
 	"github.com/deis/k8s-claimer/gke"
-	"github.com/deis/k8s-claimer/k8s"
 	"github.com/pborman/uuid"
 )
-
-func newFakeServiceGetter() *k8s.FakeServiceGetter {
-	return &k8s.FakeServiceGetter{}
-}
-
-func newFakeServiceUpdater() *k8s.FakeServiceUpdater {
-	return &k8s.FakeServiceUpdater{}
-}
-
-func newFakeServiceGetterUpdater() *k8s.FakeServiceGetterUpdater {
-	return &k8s.FakeServiceGetterUpdater{
-		FakeServiceGetter:  newFakeServiceGetter(),
-		FakeServiceUpdater: newFakeServiceUpdater(),
-	}
-}
 
 func newFakeClusterLister() *gke.FakeClusterLister {
 	return &gke.FakeClusterLister{}
@@ -35,7 +19,7 @@ func newFakeClusterLister() *gke.FakeClusterLister {
 
 func TestCreateLeaseInvalidReq(t *testing.T) {
 	cl := newFakeClusterLister()
-	slu := newFakeServiceGetterUpdater()
+	slu := newFakeServiceGetterUpdater(nil, nil, nil, nil)
 	hdl := CreateLease(cl, slu, "", "", "")
 	req, err := http.NewRequest("POST", "/lease", bytes.NewReader(nil))
 	assert.NoErr(t, err)
@@ -48,7 +32,7 @@ func TestCreateLeaseValidResp(t *testing.T) {
 	t.Skip("FIXME")
 	t.SkipNow()
 	cl := newFakeClusterLister()
-	slu := newFakeServiceGetterUpdater()
+	slu := newFakeServiceGetterUpdater(nil, nil, nil, nil)
 	hdl := CreateLease(cl, slu, "", "", "")
 	reqBody := `{"max_time":30}`
 	req, err := http.NewRequest("POST", "/lease", strings.NewReader(reqBody))
