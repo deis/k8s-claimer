@@ -86,8 +86,13 @@ func CreateLease(
 		}
 
 		newToken := uuid.NewUUID()
+		kubeConfigBytes, err := createKubeConfigFromCluster(availableCluster)
+		if err != nil {
+			htp.Error(w, http.StatusInternalServerError, "error creating kubeconfig file for cluster %s (%s)", uuidAndLease.Lease.ClusterName, err)
+			return
+		}
 		resp := createLeaseResp{
-			KubeConfig: createKubeConfigFromCluster(availableCluster),
+			KubeConfig: string(kubeConfigBytes),
 			IP:         availableCluster.Endpoint,
 			Token:      newToken.String(),
 		}

@@ -2,10 +2,17 @@ package handlers
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/deis/k8s-claimer/clusters"
 	"github.com/deis/k8s-claimer/leases"
 	container "google.golang.org/api/container/v1"
+	yaml "gopkg.in/yaml.v2"
+	k8scmd "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
+)
+
+const (
+	kubeconfigAPIVersion = "v1"
 )
 
 var (
@@ -26,7 +33,39 @@ func findUnusedGKECluster(clusterMap *clusters.Map, leaseMap *leases.Map) (*cont
 	return nil, errUnusedGKEClusterNotFound
 }
 
-func createKubeConfigFromCluster(cluster *container.Cluster) string {
-	// TODO: implement
-	return ""
+func createKubeConfigFromCluster(cluster *container.Cluster) ([]byte, error) {
+	contextName := strings.ToLower(cluster.Name)
+	authInfoName := strings.ToLower(cluster.Name)
+	clusters := map[string]*k8scmd.Cluster{
+		cluster.Name: &k8scmd.Cluster{
+			Server: cluster.Endpoint,
+			CertificateAuthorityData: []byte(cluster.MasterAuth.ClusterCaCertificate),
+		},
+	}
+	contexts := map[string]*k8scmd.Context{
+		contextName: &k8scmd.Context{
+			Cluster:  cluster.Name,
+			AuthInfo: authInfoName,
+		},
+	}
+	authInfos := map[string]*k8scmd.AuthInfo{
+		authInfoName: &k8scmd.AuthInfo{
+			ClientCertificateData: []byte(cluster.MasterAuth.ClientCertificate),
+			ClientKeyData:         []byte(cluster.MasterAuth.ClientKey),
+			Username:              cluster.MasterAuth.Username,
+			Password:              cluster.MasterAuth.Password,
+		},
+	}
+	cfg := &k8scmd.Config{
+		CurrentContext: contextName,
+		APIVersion:     kubeconfigAPIVersion,
+		Clusters:       clusters,
+		Contexts:       contexts,
+		AuthInfos:      authInfos,
+	}
+	cfgBytes, err := yaml.Marshal(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return cfgBytes, nil
 }
