@@ -5,12 +5,12 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-func parseGoogleConfigFile(appName string) (*config.GoogleCloudAccountFile, error) {
+func parseGoogleConfig(appName string) (*config.GoogleCloud, error) {
 	conf := new(config.GoogleCloud)
 	if err := envconfig.Process(appName, conf); err != nil {
 		return nil, err
 	}
-	return config.GoogleCloudAccountInfo(conf.AccountFileLocation)
+	return conf, nil
 }
 
 func parseServerConfig(appName string) (*config.Server, error) {

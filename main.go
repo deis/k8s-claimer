@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/deis/k8s-claimer/config"
 	"github.com/deis/k8s-claimer/gke"
 	"github.com/deis/k8s-claimer/handlers"
 	"github.com/deis/k8s-claimer/htp"
@@ -19,7 +20,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error getting server config (%s)", err)
 	}
-	gCloudConfFile, err := parseGoogleConfigFile(appName)
+	gCloudConf, err := parseGoogleConfig(appName)
+	if err != nil {
+		log.Fatalf("Error getting google cloud config (%s)", err)
+	}
+	gCloudConfFile, err := config.GoogleCloudAccountInfo(gCloudConf.AccountFileLocation)
 	if err != nil {
 		log.Fatalf("Error getting google cloud config (%s)", err)
 	}
@@ -39,7 +44,13 @@ func main() {
 	services := k8sClient.Services(serverConf.Namespace)
 	mux := http.NewServeMux()
 	leaseHandler := htp.MethodMux(map[htp.Method]http.Handler{
-		htp.Post:   handlers.CreateLease(containerService, services),
+		htp.Post: handlers.CreateLease(
+			gke.NewGKEClusterLister(containerService),
+			services,
+			serverConf.Namespace,
+			gCloudConf.ProjectID,
+			gCloudConf.Zone,
+		),
 		htp.Delete: handlers.DeleteLease(services),
 	})
 	mux.Handle("/lease", leaseHandler)

@@ -1,8 +1,10 @@
-hash: 6819617d52c8475b8b115d2ba0770f8d279370b0533f42421a40106a43518dff
-updated: 2016-04-05T14:41:39.59451028-07:00
+hash: 2897899614ccf56f1a2559208be0ce2aa44454890add82b08006eeb2155a6ed1
+updated: 2016-04-06T12:27:34.129133-07:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c
+- name: github.com/arschles/assert
+  version: d21ecd4884be33397d1298c3738b2b4937c7f499
 - name: github.com/beorn7/perks
   version: b965b613227fddccbfffe13eae360ed3fa822f8d
   subpackages:
