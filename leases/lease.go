@@ -6,6 +6,8 @@ import (
 )
 
 const (
+	// TimeFormat is the standard format that all lease expiration times are stored as in k8s
+	// annotations
 	TimeFormat = time.RFC3339
 )
 
