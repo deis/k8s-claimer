@@ -31,7 +31,18 @@ func TestDeleteLeaseInvalidLeaseToken(t *testing.T) {
 }
 
 func TestDeleteLeaseInvalidAnnotations(t *testing.T) {
-	t.Skip("TODO")
+	getterUpdater := newFakeServiceGetterUpdater(
+		&api.Service{ObjectMeta: api.ObjectMeta{Annotations: map[string]string{"a": "b"}}},
+		nil,
+		nil,
+		nil,
+	)
+	hdl := DeleteLease(getterUpdater, "claimer")
+	req, err := http.NewRequest("DELETE", "/lease/"+uuid.New(), nil)
+	assert.NoErr(t, err)
+	res := httptest.NewRecorder()
+	hdl.ServeHTTP(res, req)
+	assert.Equal(t, res.Code, http.StatusInternalServerError, "response code")
 }
 
 func TestDeleteLeaseNoSuchLease(t *testing.T) {
