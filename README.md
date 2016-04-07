@@ -64,7 +64,7 @@ This response code is returned if any of the following occur:
 - The annotations on the service object were malformed
 - A cluster was available, but the new lease information couldn't be saved
 - An expired lease exists but it points to a non-existent cluster
-- The lease was succes
+- The lease was succesful but the response body couldn't be rendered
 
 #### `409 Conflict`
 
@@ -72,7 +72,7 @@ This response code is returned if there are no clusters available for lease.
 
 #### `200 OK`
 
-This response code is returned along with the below response body if a lease could be successfully
+This response code is returned along with the below response body if a lease was successfully
 acquired.
 
 ```json
@@ -109,7 +109,7 @@ This response code is returned in the following cases:
 
 - The server couldn't communicate with the Kubernetes Master to get the service object
 - The annotations on the service object were malformed
-- The lease was found and could be deleted, but the updated lease statuses couldn't be saved
+- The lease was found and deleted, but the updated lease statuses couldn't be saved
 
 #### `409 Conflict`
 
