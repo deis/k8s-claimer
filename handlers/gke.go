@@ -35,7 +35,7 @@ func findUnusedGKECluster(clusterMap *clusters.Map, leaseMap *leases.Map) (*cont
 
 func createKubeConfigFromCluster(cluster *container.Cluster) ([]byte, error) {
 	contextName := strings.ToLower(cluster.Name)
-	authInfoName := strings.ToLower(cluster.Name)
+	authInfoName := contextName
 	clusters := map[string]*k8scmd.Cluster{
 		cluster.Name: &k8scmd.Cluster{
 			Server: cluster.Endpoint,
