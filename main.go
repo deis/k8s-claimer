@@ -51,7 +51,7 @@ func main() {
 			gCloudConf.ProjectID,
 			gCloudConf.Zone,
 		),
-		htp.Delete: handlers.DeleteLease(services),
+		htp.Delete: handlers.DeleteLease(services, serverConf.ServiceName),
 	})
 	mux.Handle("/lease", leaseHandler)
 
