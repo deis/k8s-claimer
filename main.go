@@ -47,7 +47,7 @@ func main() {
 		htp.Post: handlers.CreateLease(
 			gke.NewGKEClusterLister(containerService),
 			services,
-			serverConf.Namespace,
+			serverConf.ServiceName,
 			gCloudConf.ProjectID,
 			gCloudConf.Zone,
 		),
