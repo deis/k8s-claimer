@@ -1,16 +1,17 @@
 package config
 
 import (
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
-	"os"
 )
 
 // GoogleCloud contains the Google cloud related configuration, including credentials and
 // project info
 type GoogleCloud struct {
-	AccountFileLocation string `envconfig:"GOOGLE_CLOUD_ACCOUNT_FILE_LOCATION" required:"true"`
-	ProjectID           string `envconfig:"GOOGLE_CLOUD_PROJECT_ID" required:"true"`
-	Zone                string `envconfig:"GOOGLE_CLOUD_ZONE" required:"true"`
+	AccountFileBase64 string `envconfig:"GOOGLE_CLOUD_ACCOUNT_FILE_BASE64" required:"true"`
+	ProjectID         string `envconfig:"GOOGLE_CLOUD_PROJECT_ID" required:"true"`
+	Zone              string `envconfig:"GOOGLE_CLOUD_ZONE" required:"true"`
 }
 
 // GoogleCloudAccountFile represents the structure of the account file JSON file.
@@ -29,14 +30,13 @@ type GoogleCloudAccountFile struct {
 
 // GoogleCloudAccountInfo parses the file at fileLoc into a GoogleCloudAccountFile and returns
 // it. Returns nil and an appropriate error if any error occurred in reading or decoding.
-func GoogleCloudAccountInfo(fileLoc string) (*GoogleCloudAccountFile, error) {
-	fd, err := os.Open(fileLoc)
+func GoogleCloudAccountInfo(fileBase64 string) (*GoogleCloudAccountFile, error) {
+	decodedBytes, err := base64.StdEncoding.DecodeString(fileBase64)
 	if err != nil {
 		return nil, err
 	}
-	defer fd.Close()
 	ret := new(GoogleCloudAccountFile)
-	if err := json.NewDecoder(fd).Decode(ret); err != nil {
+	if err := json.NewDecoder(bytes.NewBuffer(decodedBytes)).Decode(ret); err != nil {
 		return nil, err
 	}
 	return ret, nil

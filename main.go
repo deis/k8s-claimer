@@ -24,7 +24,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error getting google cloud config (%s)", err)
 	}
-	gCloudConfFile, err := config.GoogleCloudAccountInfo(gCloudConf.AccountFileLocation)
+	gCloudConfFile, err := config.GoogleCloudAccountInfo(gCloudConf.AccountFileBase64)
 	if err != nil {
 		log.Fatalf("Error getting google cloud config (%s)", err)
 	}
