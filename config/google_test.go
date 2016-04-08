@@ -1,6 +1,8 @@
 package config
 
 import (
+	"encoding/base64"
+	"io/ioutil"
 	"path/filepath"
 	"testing"
 
@@ -10,7 +12,10 @@ import (
 
 func TestGoogleCloudAccountInfo(t *testing.T) {
 	fileLoc := filepath.Join(testutil.TestDataDir(), "google_account_info.json")
-	f, err := GoogleCloudAccountInfo(fileLoc)
+	fileBytes, err := ioutil.ReadFile(fileLoc)
+	assert.NoErr(t, err)
+	encoded := base64.StdEncoding.EncodeToString(fileBytes)
+	f, err := GoogleCloudAccountInfo(encoded)
 	assert.NoErr(t, err)
 	assert.Equal(t, f.PrivateKeyID, "abc", "private key ID")
 	assert.Equal(t, f.PrivateKey, "def", "private key")
