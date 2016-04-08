@@ -11,7 +11,7 @@ import (
 type GoogleCloud struct {
 	AccountFileBase64 string `envconfig:"GOOGLE_CLOUD_ACCOUNT_FILE_BASE64" required:"true"`
 	ProjectID         string `envconfig:"GOOGLE_CLOUD_PROJECT_ID" required:"true"`
-	Zone              string `envconfig:"GOOGLE_CLOUD_ZONE" required:"true"`
+	Zone              string `envconfig:"GOOGLE_CLOUD_ZONE" default:"-"`
 }
 
 // GoogleCloudAccountFile represents the structure of the account file JSON file.
