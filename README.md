@@ -38,11 +38,11 @@ Acquire a new lease.
 ### Request Body
 
 ```json
-{"max_time": "30"}
+{"max_time": 30}
 ```
 
-Note that the value of `max_time` is the maximum lease duration in seconds. After this duration
-expires, the lease will be automatically released.
+Note that the value of `max_time` is the maximum lease duration in seconds. It must be a number.
+After this duration expires, the lease will be automatically released.
 
 ### Responses
 
@@ -77,7 +77,7 @@ acquired.
 
 ```json
 {
-  "kubeconfig": "Full Kubernetes config file. Can be copied into ~/.kube/config for use with kubectl",
+  "kubeconfig": "RFC 4648 base64 encoded Kubernetes config file. After decoding, this value can be written to ~/.kube/config for use with kubectl",
   "ip": "The IP address of the Kubernetes master server in GKE",
   "token": "The token of the lease. This is your proof of ownership of the cluster, until the lease expires or you release it"
 }
