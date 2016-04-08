@@ -21,13 +21,15 @@ func ParseMapFromAnnotations(annotations map[string]string) (*Map, error) {
 	uuidMap := make(map[string]*Lease)
 	nameMap := make(map[string]uuid.UUID)
 	for uuidStr, leaseStr := range annotations {
+		// try to parse the UUID and the lease, but skip if the annotation has a malformed UUID or
+		// lease. This is to work in clusters that have other annotations
 		u := uuid.Parse(uuidStr)
 		if u == nil {
-			return nil, ErrMalformedUUID{uuidStr: uuidStr}
+			continue
 		}
 		lease, err := ParseLease(leaseStr)
 		if err != nil {
-			return nil, ErrParseLease{leaseStr: leaseStr, parseErr: err}
+			continue
 		}
 		uuidMap[u.String()] = lease
 		nameMap[lease.ClusterName] = u
