@@ -34,6 +34,8 @@ func TestDeleteLeaseInvalidLeaseToken(t *testing.T) {
 }
 
 func TestDeleteLeaseInvalidAnnotations(t *testing.T) {
+	// Issue a DELETE with a lease token that doesn't point to a valid lease.
+	// Annotations have invalid data in them, which the lease parser should just ignore.
 	getterUpdater := newFakeServiceGetterUpdater(
 		&api.Service{ObjectMeta: api.ObjectMeta{Annotations: map[string]string{"a": "b"}}},
 		nil,
@@ -45,7 +47,7 @@ func TestDeleteLeaseInvalidAnnotations(t *testing.T) {
 	assert.NoErr(t, err)
 	res := httptest.NewRecorder()
 	hdl.ServeHTTP(res, req)
-	assert.Equal(t, res.Code, http.StatusInternalServerError, "response code")
+	assert.Equal(t, res.Code, http.StatusConflict, "response code")
 }
 
 func TestDeleteLeaseNoSuchLease(t *testing.T) {
