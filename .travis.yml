@@ -11,7 +11,7 @@ services:
 install:
 - make bootstrap
 script:
-  - make build test
+  - make build test docker-build
 deploy:
   provider: script
   script: _scripts/deploy.sh
