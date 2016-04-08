@@ -74,7 +74,7 @@ func CreateLease(
 			return
 		}
 		var availableCluster *container.Cluster
-		if unusedCluster == nil {
+		if unusedCluster != nil {
 			availableCluster = unusedCluster
 		}
 		if expiredLeaseErr == nil {
