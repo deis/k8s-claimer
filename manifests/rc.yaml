@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: k8s-claimer
+  namespace: deis
+  labels:
+    heritage: deis
+spec:
+  replicas: 1
+  selector:
+    app: k8s-claimer
+  template:
+    metadata:
+      labels:
+        app: k8s-claimer
+    spec:
+      containers:
+        - name: k8s-claimer
+          image: quay.io/deisci/k8s-claimer:canary
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: "NAMESPACE"
+              value: "deis"
+            - name: "GOOGLE_CLOUD_ACCOUNT_FILE_BASE64"
+              value: "Place a base-64 encoded Google Cloud JSON Key file here. Make sure you JSON encode with RFC 4648. For example, if you are encoding with Go, use the (encoding/base64).StdEncoding.EncodeToString func"
+            - name: "GOOGLE_CLOUD_PROJECT_ID"
+              value: "deis-sandbox"
+            - name: "GOOGLE_CLOUD_ZONE"
+              value: "us-central1-a"

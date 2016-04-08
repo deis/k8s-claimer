@@ -74,7 +74,7 @@ func CreateLease(
 			return
 		}
 		var availableCluster *container.Cluster
-		if unusedCluster == nil {
+		if unusedCluster != nil {
 			availableCluster = unusedCluster
 		}
 		if expiredLeaseErr == nil {
@@ -83,6 +83,7 @@ func CreateLease(
 				htp.Error(w, http.StatusInternalServerError, "cluster %s has an expired lease but does not exist in GKE", uuidAndLease.Lease.ClusterName)
 				return
 			}
+			leaseMap.DeleteLease(uuidAndLease.UUID)
 			availableCluster = cl
 		}
 
@@ -98,7 +99,7 @@ func CreateLease(
 			IP:         availableCluster.Endpoint,
 			Token:      newToken.String(),
 		}
-		leaseMap.DeleteLease(uuidAndLease.UUID)
+
 		leaseMap.CreateLease(newToken, leases.NewLease(availableCluster.Name, req.expirationTime(time.Now())))
 
 		if err := saveAnnotations(services, svc, leaseMap); err != nil {
