@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -86,8 +87,14 @@ func CreateLease(
 		}
 
 		newToken := uuid.NewUUID()
+		kubeConfigBytes, err := createKubeConfigFromCluster(availableCluster)
+		if err != nil {
+			htp.Error(w, http.StatusInternalServerError, "error creating kubeconfig file for cluster %s (%s)", uuidAndLease.Lease.ClusterName, err)
+			return
+		}
+		kubeConfigStr := base64.StdEncoding.EncodeToString(kubeConfigBytes)
 		resp := createLeaseResp{
-			KubeConfig: createKubeConfigFromCluster(availableCluster),
+			KubeConfig: kubeConfigStr,
 			IP:         availableCluster.Endpoint,
 			Token:      newToken.String(),
 		}
