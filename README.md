@@ -25,3 +25,96 @@ either their lease duration expires or someone releases the lease with their UUI
 specifies the lease duration when they acquire it.
 
 For implementation details, see [the architecture document](doc/architecture.md)
+
+# API
+
+The server exposes a REST API to acquire and release leases for clusters. The subsections
+herein list each endpoint.
+
+## `POST /lease`
+
+Acquire a new lease.
+
+### Request Body
+
+```json
+{"max_time": "30"}
+```
+
+Note that the value of `max_time` is the maximum lease duration in seconds. After this duration
+expires, the lease will be automatically released.
+
+### Responses
+
+Unless otherwise noted, all responses except for `200 OK` indicate that the lease was not acquired.
+
+In non-200 response code scenarios, a body may be returned with an explanation of the error,
+but the existence or contents of that body are not guaranteed.
+
+#### `401 Bad Request`
+
+This response code is returned with no specific body if the request body was malformed.
+
+#### `500 Internal Server Error`
+
+This response code is returned if any of the following occur:
+
+- The server couldn't communicate with the Kubernetes Master to get the service object
+- The server couldn't communicate with the GKE API
+- The annotations on the service object were malformed
+- A cluster was available, but the new lease information couldn't be saved
+- An expired lease exists but it points to a non-existent cluster
+- The lease was succesful but the response body couldn't be rendered
+
+#### `409 Conflict`
+
+This response code is returned if there are no clusters available for lease.
+
+#### `200 OK`
+
+This response code is returned along with the below response body if a lease was successfully
+acquired.
+
+```json
+{
+  "kubeconfig": "Full Kubernetes config file. Can be copied into ~/.kube/config for use with kubectl",
+  "ip": "The IP address of the Kubernetes master server in GKE",
+  "token": "The token of the lease. This is your proof of ownership of the cluster, until the lease expires or you release it"
+}
+```
+
+## `Delete /lease/{token}`
+
+Release an existing lease, identified by `{token}`.
+
+### Responses
+
+All responses except for `200 OK` indicate that no leases were changed. Since the state of the
+lease identified by `{token}` (if there was one) can change over time, there are no guarantees
+on the state of the lease after this API call returns in these cases.
+
+In all cases, a body may be returned with an explanation of the response, but the existece or
+contents of that body are not guaranteed.
+
+#### `401 Bad Request`
+
+This response code is returned in the following cases:
+
+- The URL path did not include a lease token
+- The lease token was malformed
+
+#### `500 Internal Server Error`
+
+This response code is returned in the following cases:
+
+- The server couldn't communicate with the Kubernetes Master to get the service object
+- The annotations on the service object were malformed
+- The lease was found and deleted, but the updated lease statuses couldn't be saved
+
+#### `409 Conflict`
+
+This response code is returned when no lease exists with the given token.
+
+#### `200 OK`
+
+The lease was successfully deleted. The given token is no longer valid and should not be reused.
