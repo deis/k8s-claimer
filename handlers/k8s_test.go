@@ -5,10 +5,32 @@ import (
 	"time"
 
 	"github.com/arschles/assert"
+	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/deis/k8s-claimer/testutil"
 	"github.com/pborman/uuid"
+	"k8s.io/kubernetes/pkg/api"
 )
+
+func newFakeServiceGetter(svc *api.Service, err error) *k8s.FakeServiceGetter {
+	return &k8s.FakeServiceGetter{Svc: svc, Err: err}
+}
+
+func newFakeServiceUpdater(retSvc *api.Service, err error) *k8s.FakeServiceUpdater {
+	return &k8s.FakeServiceUpdater{RetSvc: retSvc, Err: err}
+}
+
+func newFakeServiceGetterUpdater(
+	getSvc *api.Service,
+	getErr error,
+	updateSvc *api.Service,
+	updateErr error,
+) *k8s.FakeServiceGetterUpdater {
+	return &k8s.FakeServiceGetterUpdater{
+		FakeServiceGetter:  newFakeServiceGetter(getSvc, getErr),
+		FakeServiceUpdater: newFakeServiceUpdater(updateSvc, updateErr),
+	}
+}
 
 func TestFindExpiredLease(t *testing.T) {
 	clusterNames := testutil.GetClusterNames()

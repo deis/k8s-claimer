@@ -47,11 +47,11 @@ func main() {
 		htp.Post: handlers.CreateLease(
 			gke.NewGKEClusterLister(containerService),
 			services,
-			serverConf.Namespace,
+			serverConf.ServiceName,
 			gCloudConf.ProjectID,
 			gCloudConf.Zone,
 		),
-		htp.Delete: handlers.DeleteLease(services),
+		htp.Delete: handlers.DeleteLease(services, serverConf.ServiceName),
 	})
 	mux.Handle("/lease", leaseHandler)
 
