@@ -78,7 +78,8 @@ acquired.
 {
   "kubeconfig": "RFC 4648 base64 encoded Kubernetes config file. After decoding, this value can be written to ~/.kube/config for use with kubectl",
   "ip": "The IP address of the Kubernetes master server in GKE",
-  "token": "The token of the lease. This is your proof of ownership of the cluster, until the lease expires or you release it"
+  "token": "The token of the lease. This is your proof of ownership of the cluster, until the lease expires or you release it",
+  "cluster_name": "The name of the cluster. This value is purely informational, and fetched from GKE"
 }
 ```
 
