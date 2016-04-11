@@ -20,9 +20,10 @@ type createLeaseReq struct {
 }
 
 type createLeaseResp struct {
-	KubeConfig string `json:"kubeconfig"`
-	IP         string `json:"ip"`
-	Token      string `json:"uuid"`
+	KubeConfig  string `json:"kubeconfig"`
+	IP          string `json:"ip"`
+	Token       string `json:"uuid"`
+	ClusterName string `json:"cluster_name"`
 }
 
 func (c createLeaseReq) maxTimeDur() time.Duration {
@@ -95,9 +96,10 @@ func CreateLease(
 		}
 		kubeConfigStr := base64.StdEncoding.EncodeToString(kubeConfigBytes)
 		resp := createLeaseResp{
-			KubeConfig: kubeConfigStr,
-			IP:         availableCluster.Endpoint,
-			Token:      newToken.String(),
+			KubeConfig:  kubeConfigStr,
+			IP:          availableCluster.Endpoint,
+			Token:       newToken.String(),
+			ClusterName: availableCluster.Name,
 		}
 
 		leaseMap.CreateLease(newToken, leases.NewLease(availableCluster.Name, req.expirationTime(time.Now())))
