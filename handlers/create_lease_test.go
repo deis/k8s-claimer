@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/arschles/assert"
+	"github.com/deis/k8s-claimer/api"
 	"github.com/deis/k8s-claimer/gke"
 	"github.com/pborman/uuid"
 	container "google.golang.org/api/container/v1"
@@ -52,7 +53,7 @@ func TestCreateLeaseValidResp(t *testing.T) {
 	res := httptest.NewRecorder()
 	hdl.ServeHTTP(res, req)
 	assert.Equal(t, res.Code, http.StatusOK, "response code")
-	leaseResp := new(createLeaseResp)
+	leaseResp := new(api.CreateLeaseResp)
 	assert.NoErr(t, json.NewDecoder(res.Body).Decode(leaseResp))
 	expectedKubeCfg, err := createKubeConfigFromCluster(cluster)
 	assert.NoErr(t, err)

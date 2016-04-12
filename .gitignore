@@ -25,3 +25,6 @@ _testmain.go
 vendor
 k8s-claimer
 rootfs/bin
+cli/bin
+k8s-claimer-cli
+kubeconfig.yaml
