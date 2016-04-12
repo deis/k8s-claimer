@@ -24,4 +24,4 @@ docker-build:
 	docker tag -f ${IMAGE} ${MUTABLE_IMAGE}
 
 deploy-to-deis:
-	deis pull ${IMAGE}
+	deis pull ${IMAGE} -a ${DEIS_APP_NAME}
