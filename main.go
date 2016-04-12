@@ -43,7 +43,7 @@ func main() {
 
 	services := k8sClient.Services(serverConf.Namespace)
 	mux := http.NewServeMux()
-	leaseHandler := htp.MethodMux(map[htp.Method]http.Handler{
+	createLeaseHandler := htp.MethodMux(map[htp.Method]http.Handler{
 		htp.Post: handlers.CreateLease(
 			gke.NewGKEClusterLister(containerService),
 			services,
@@ -51,9 +51,12 @@ func main() {
 			gCloudConf.ProjectID,
 			gCloudConf.Zone,
 		),
+	})
+	deleteLeaseHandler := htp.MethodMux(map[htp.Method]http.Handler{
 		htp.Delete: handlers.DeleteLease(services, serverConf.ServiceName),
 	})
-	mux.Handle("/lease", leaseHandler)
+	mux.Handle("/lease", createLeaseHandler)
+	mux.Handle("/lease/", deleteLeaseHandler)
 
 	log.Printf("Running %s on %s", appName, serverConf.HostStr())
 	http.ListenAndServe(serverConf.HostStr(), mux)
