@@ -10,6 +10,8 @@ DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
 DEV_ENV_PREFIX := docker run --rm -e GO15VENDOREXPERIMENT=1 -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR}
 DEV_ENV_CMD := ${DEV_ENV_PREFIX} ${DEV_ENV_IMAGE}
 
+DEIS_BINARY_NAME ?= ./deis
+
 bootstrap:
 	${DEV_ENV_CMD} glide install
 
@@ -24,4 +26,4 @@ docker-build:
 	docker tag -f ${IMAGE} ${MUTABLE_IMAGE}
 
 deploy-to-deis:
-	deis pull ${IMAGE} -a ${DEIS_APP_NAME}
+	${DEIS_BINARY_NAME} pull ${IMAGE} -a ${DEIS_APP_NAME}
