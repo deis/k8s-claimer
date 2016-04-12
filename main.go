@@ -15,6 +15,13 @@ const (
 	appName = "k8s-claimer"
 )
 
+func configureRoutes(serveMux *http.ServeMux, createLeaseHandler http.Handler, deleteLeaseHandler http.Handler) {
+	createLeaseHandler = htp.MethodMux(map[htp.Method]http.Handler{htp.Post: createLeaseHandler})
+	deleteLeaseHandler = htp.MethodMux(map[htp.Method]http.Handler{htp.Delete: deleteLeaseHandler})
+	serveMux.Handle("/lease", createLeaseHandler)
+	serveMux.Handle("/lease/", deleteLeaseHandler)
+}
+
 func main() {
 	serverConf, err := parseServerConfig(appName)
 	if err != nil {
@@ -43,20 +50,15 @@ func main() {
 
 	services := k8sClient.Services(serverConf.Namespace)
 	mux := http.NewServeMux()
-	createLeaseHandler := htp.MethodMux(map[htp.Method]http.Handler{
-		htp.Post: handlers.CreateLease(
-			gke.NewGKEClusterLister(containerService),
-			services,
-			serverConf.ServiceName,
-			gCloudConf.ProjectID,
-			gCloudConf.Zone,
-		),
-	})
-	deleteLeaseHandler := htp.MethodMux(map[htp.Method]http.Handler{
-		htp.Delete: handlers.DeleteLease(services, serverConf.ServiceName),
-	})
-	mux.Handle("/lease", createLeaseHandler)
-	mux.Handle("/lease/", deleteLeaseHandler)
+	createLeaseHandler := handlers.CreateLease(
+		gke.NewGKEClusterLister(containerService),
+		services,
+		serverConf.ServiceName,
+		gCloudConf.ProjectID,
+		gCloudConf.Zone,
+	)
+	deleteLeaseHandler := handlers.DeleteLease(services, serverConf.ServiceName)
+	configureRoutes(mux, createLeaseHandler, deleteLeaseHandler)
 
 	log.Printf("Running %s on %s", appName, serverConf.HostStr())
 	http.ListenAndServe(serverConf.HostStr(), mux)
