@@ -22,6 +22,12 @@ func (e errExpiredLeaseGKEMissing) Error() string {
 	return fmt.Sprintf("cluster %s has an expired lease but does not exist in GKE", e.clusterName)
 }
 
+// searchForFreeCluster first looks in GKE first for a GKE cluster that has no lease associated
+// with it and returns it.
+//
+// Returns errNoAvailableOrExpiredClustersFound if it found no free or expired lease clusters.
+// Returns errExpiredLeaseGKEMissing if it found an expired lease but the cluster associated with
+// that lease doesn't exist in GKE
 func searchForFreeCluster(clusterMap *clusters.Map, leaseMap *leases.Map) (*container.Cluster, error) {
 	unusedCluster, unusedClusterErr := findUnusedGKECluster(clusterMap, leaseMap)
 	uuidAndLease, expiredLeaseErr := findExpiredLease(leaseMap)
