@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -11,7 +13,6 @@ import (
 	"github.com/deis/k8s-claimer/testutil"
 	"github.com/pborman/uuid"
 	container "google.golang.org/api/container/v1"
-	yaml "gopkg.in/yaml.v2"
 	k8scmd "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
 )
 
@@ -78,10 +79,8 @@ func TestCreateKubeConfigFromCluster(t *testing.T) {
 			Username:             "test username",
 		},
 	}
-	kubeConfigBytes, err := createKubeConfigFromCluster(cluster)
+	k8sConfig, err := createKubeConfigFromCluster(cluster)
 	assert.NoErr(t, err)
-	k8sConfig := new(k8scmd.Config)
-	assert.NoErr(t, yaml.Unmarshal(kubeConfigBytes, k8sConfig))
 	assert.Equal(t, k8sConfig.APIVersion, "v1", "api version")
 	assert.Equal(t, k8sConfig.CurrentContext, strings.ToLower(cluster.Name), "context")
 
@@ -103,4 +102,61 @@ func TestCreateKubeConfigFromCluster(t *testing.T) {
 	assert.True(t, clusterFoundFromContext, "cluster not found from context.Cluster value %s", contextConfig.Cluster)
 	_, authFoundFromContext := k8sConfig.AuthInfos[contextConfig.AuthInfo]
 	assert.True(t, authFoundFromContext, "auth info not found from context.AuthInfo value %s", contextConfig.AuthInfo)
+}
+
+type contextClusterAndAuthInfo struct {
+	contextName  string
+	clusterName  string
+	authInfoName string
+}
+
+func TestMarshalAndEncodeKubeConfig(t *testing.T) {
+	const namespace = "myns"
+	const locationOfOrigin = "myloc"
+	cfg := &k8scmd.Config{
+		APIVersion: kubeconfigAPIVersion,
+		Clusters:   map[string]*k8scmd.Cluster{},
+		AuthInfos:  map[string]*k8scmd.AuthInfo{},
+		Contexts:   map[string]*k8scmd.Context{},
+	}
+
+	contextNames := []string{"ctx1", "ctx2", "ctx3"}
+	clusterNames := []string{"cluster1", "cluster2", "cluster3"}
+	authInfoNames := []string{"authInfo1", "authInfo2", "authInfo3"}
+	for i, contextName := range contextNames {
+		cfg.CurrentContext = contextName
+		cfg.Contexts[contextName] = &k8scmd.Context{
+			LocationOfOrigin: locationOfOrigin,
+			Cluster:          clusterNames[i],
+			AuthInfo:         authInfoNames[i],
+			Namespace:        namespace,
+		}
+	}
+	for _, clusterName := range clusterNames {
+		cfg.Clusters[clusterName] = &k8scmd.Cluster{
+			LocationOfOrigin:         locationOfOrigin,
+			Server:                   clusterName + "/server",
+			APIVersion:               kubeconfigAPIVersion,
+			InsecureSkipTLSVerify:    false,
+			CertificateAuthorityData: []byte(clusterName + "_cert_authority"),
+		}
+	}
+	for _, authInfoName := range authInfoNames {
+		cfg.AuthInfos[authInfoName] = &k8scmd.AuthInfo{
+			LocationOfOrigin:      locationOfOrigin,
+			ClientCertificateData: []byte(authInfoName + "_cert_data"),
+			ClientKeyData:         []byte(authInfoName + "_key_data"),
+			Token:                 authInfoName + "_bearer_token",
+			Username:              authInfoName + "_username",
+			Password:              authInfoName + "_password",
+		}
+	}
+	str, err := marshalAndEncodeKubeConfig(cfg)
+	assert.NoErr(t, err)
+	decodedBytes, err := base64.StdEncoding.DecodeString(str)
+	assert.NoErr(t, err)
+	decodedCfg := new(k8scmd.Config)
+	assert.NoErr(t, json.Unmarshal(decodedBytes, decodedCfg))
+	assert.Equal(t, decodedCfg.APIVersion, cfg.APIVersion, "API version")
+
 }

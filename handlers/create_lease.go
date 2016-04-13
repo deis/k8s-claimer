@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -83,7 +82,7 @@ func CreateLease(
 		}
 
 		newToken := uuid.NewUUID()
-		kubeConfigBytes, err := createKubeConfigFromCluster(availableCluster)
+		kubeConfig, err := createKubeConfigFromCluster(availableCluster)
 		if err != nil {
 			htp.Error(
 				w,
@@ -94,7 +93,12 @@ func CreateLease(
 			)
 			return
 		}
-		kubeConfigStr := base64.StdEncoding.EncodeToString(kubeConfigBytes)
+		kubeConfigStr, err := marshalAndEncodeKubeConfig(kubeConfig)
+		if err != nil {
+			htp.Error(w, http.StatusInternalServerError, "error marshaling & encoding kubeconfig (%s)", err)
+			return
+		}
+
 		resp := createLeaseResp{
 			KubeConfig:  kubeConfigStr,
 			IP:          availableCluster.Endpoint,

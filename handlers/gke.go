@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"strings"
 
 	"github.com/deis/k8s-claimer/clusters"
 	"github.com/deis/k8s-claimer/leases"
 	container "google.golang.org/api/container/v1"
-	yaml "gopkg.in/yaml.v2"
 	k8scmd "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
 )
 
@@ -33,7 +34,7 @@ func findUnusedGKECluster(clusterMap *clusters.Map, leaseMap *leases.Map) (*cont
 	return nil, errUnusedGKEClusterNotFound
 }
 
-func createKubeConfigFromCluster(cluster *container.Cluster) ([]byte, error) {
+func createKubeConfigFromCluster(cluster *container.Cluster) (*k8scmd.Config, error) {
 	contextName := strings.ToLower(cluster.Name)
 	authInfoName := contextName
 	clusters := map[string]*k8scmd.Cluster{
@@ -56,16 +57,19 @@ func createKubeConfigFromCluster(cluster *container.Cluster) ([]byte, error) {
 			Password:              cluster.MasterAuth.Password,
 		},
 	}
-	cfg := &k8scmd.Config{
+	return &k8scmd.Config{
 		CurrentContext: contextName,
 		APIVersion:     kubeconfigAPIVersion,
 		Clusters:       clusters,
 		Contexts:       contexts,
 		AuthInfos:      authInfos,
-	}
-	cfgBytes, err := yaml.Marshal(cfg)
+	}, nil
+}
+
+func marshalAndEncodeKubeConfig(cfg *k8scmd.Config) (string, error) {
+	cfgBytes, err := json.Marshal(cfg)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return cfgBytes, nil
+	return base64.StdEncoding.EncodeToString(cfgBytes), nil
 }
