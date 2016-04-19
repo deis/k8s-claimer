@@ -32,6 +32,25 @@ func newFakeServiceGetterUpdater(
 	}
 }
 
+func newFakeNamespaceLister(nsList *api.NamespaceList, err error) *k8s.FakeNamespaceLister {
+	return &k8s.FakeNamespaceLister{NsList: nsList, Err: err}
+}
+
+func newFakeNamespaceDeleter(err error) *k8s.FakeNamespaceDeleter {
+	return &k8s.FakeNamespaceDeleter{Err: err}
+}
+
+func newFakeNamespaceListerDeleter(
+	listNs *api.NamespaceList,
+	listErr error,
+	deleteErr error,
+) *k8s.FakeNamespaceListerDeleter {
+	return &k8s.FakeNamespaceListerDeleter{
+		FakeNamespaceLister:  newFakeNamespaceLister(listNs, listErr),
+		FakeNamespaceDeleter: newFakeNamespaceDeleter(deleteErr),
+	}
+}
+
 func TestFindExpiredLease(t *testing.T) {
 	clusterNames := testutil.GetClusterNames()
 	expClusterIdx := -1

@@ -15,7 +15,8 @@ import (
 
 func TestDeleteLeaseNoToken(t *testing.T) {
 	getterUpdater := newFakeServiceGetterUpdater(nil, nil, nil, nil)
-	hdl := DeleteLease(getterUpdater, "claimer")
+	nsListerDeleter := newFakeNamespaceListerDeleter(nil, nil, nil)
+	hdl := DeleteLease(getterUpdater, "claimer", nsListerDeleter)
 	req, err := http.NewRequest("DELETE", "/lease", nil)
 	assert.NoErr(t, err)
 	res := httptest.NewRecorder()
@@ -25,7 +26,8 @@ func TestDeleteLeaseNoToken(t *testing.T) {
 
 func TestDeleteLeaseInvalidLeaseToken(t *testing.T) {
 	getterUpdater := newFakeServiceGetterUpdater(nil, nil, nil, nil)
-	hdl := DeleteLease(getterUpdater, "claimer")
+	nsListerDeleter := newFakeNamespaceListerDeleter(nil, nil, nil)
+	hdl := DeleteLease(getterUpdater, "claimer", nsListerDeleter)
 	req, err := http.NewRequest("DELETE", "/lease/abcd", nil)
 	assert.NoErr(t, err)
 	res := httptest.NewRecorder()
@@ -42,7 +44,8 @@ func TestDeleteLeaseInvalidAnnotations(t *testing.T) {
 		nil,
 		nil,
 	)
-	hdl := DeleteLease(getterUpdater, "claimer")
+	nsListerDeleter := newFakeNamespaceListerDeleter(nil, nil, nil)
+	hdl := DeleteLease(getterUpdater, "claimer", nsListerDeleter)
 	req, err := http.NewRequest("DELETE", "/lease/"+uuid.New(), nil)
 	assert.NoErr(t, err)
 	res := httptest.NewRecorder()
@@ -57,7 +60,8 @@ func TestDeleteLeaseNoSuchLease(t *testing.T) {
 		nil,
 		nil,
 	)
-	hdl := DeleteLease(getterUpdater, "claimer")
+	nsListerDeleter := newFakeNamespaceListerDeleter(nil, nil, nil)
+	hdl := DeleteLease(getterUpdater, "claimer", nsListerDeleter)
 	req, err := http.NewRequest("DELETE", "/lease/"+uuid.New(), nil)
 	assert.NoErr(t, err)
 	res := httptest.NewRecorder()
@@ -88,7 +92,16 @@ func TestDeleteLeaseExists(t *testing.T) {
 			nil,
 		)
 		path := "/lease/" + u.String()
-		hdl := DeleteLease(getterUpdater, "claimer")
+
+		defaultNamespaces := []string{"default", "kube-system"}
+		namespaces := append(defaultNamespaces, "ns1", "ns2")
+		nsList := api.NamespaceList{}
+		for _, namespace := range namespaces {
+			nsList.Items = append(nsList.Items, api.Namespace{ObjectMeta: api.ObjectMeta{Name: namespace}})
+		}
+		nsListerDeleter := newFakeNamespaceListerDeleter(
+			&nsList, nil, nil)
+		hdl := DeleteLease(getterUpdater, "claimer", nsListerDeleter)
 		req, err := http.NewRequest("DELETE", path, nil)
 		if err != nil {
 			t.Errorf("trial %d: error creating request %s (%s)", i, path, err)
@@ -100,5 +113,6 @@ func TestDeleteLeaseExists(t *testing.T) {
 			t.Errorf("trial %d: status code for path %s was %d, not %d", i, path, res.Code, http.StatusOK)
 			continue
 		}
+		assert.Equal(t, nsListerDeleter.NsDeleted, []string{"ns1", "ns2"}, "namespaces deleted")
 	}
 }
