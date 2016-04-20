@@ -57,7 +57,7 @@ func main() {
 		gCloudConf.ProjectID,
 		gCloudConf.Zone,
 	)
-	deleteLeaseHandler := handlers.DeleteLease(services, serverConf.ServiceName)
+	deleteLeaseHandler := handlers.DeleteLease(services, serverConf.ServiceName, k8sClient.Namespaces())
 	configureRoutes(mux, createLeaseHandler, deleteLeaseHandler)
 
 	log.Printf("Running %s on %s", appName, serverConf.HostStr())

@@ -7,10 +7,12 @@ import (
 	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/pborman/uuid"
+	api "k8s.io/kubernetes/pkg/api"
+	labels "k8s.io/kubernetes/pkg/labels"
 )
 
 // DeleteLease returns the http handler for the DELETE /lease/{token} endpoint
-func DeleteLease(services k8s.ServiceGetterUpdater, k8sServiceName string) http.Handler {
+func DeleteLease(services k8s.ServiceGetterUpdater, k8sServiceName string, namespaces k8s.NamespaceListerDeleter) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pathElts := htp.SplitPath(r)
 		if len(pathElts) != 2 {
@@ -43,6 +45,19 @@ func DeleteLease(services k8s.ServiceGetterUpdater, k8sServiceName string) http.
 		if err := saveAnnotations(services, svc, leaseMap); err != nil {
 			htp.Error(w, http.StatusInternalServerError, "error saving new annotations (%s)", err)
 			return
+		}
+
+		// clear all namespaces
+		namespacesList, err := namespaces.List(api.ListOptions{LabelSelector: labels.Everything()})
+		if err != nil {
+			htp.Error(w, http.StatusInternalServerError, "cannot get namespaces (%s)", err)
+			return
+		}
+		// TODO: delete concurrently https://github.com/deis/k8s-claimer/issues/49
+		for _, namespace := range namespacesList.Items {
+			if namespace.Name != "kube-system" && namespace.Name != "default" {
+				namespaces.Delete(namespace.Name)
+			}
 		}
 		w.WriteHeader(http.StatusOK)
 	})
