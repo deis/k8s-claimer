@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -12,7 +11,6 @@ import (
 	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/pborman/uuid"
-	container "google.golang.org/api/container/v1"
 )
 
 type createLeaseReq struct {
@@ -68,33 +66,39 @@ func CreateLease(
 			return
 		}
 
-		unusedCluster, unusedClusterErr := findUnusedGKECluster(clusterMap, leaseMap)
-		uuidAndLease, expiredLeaseErr := findExpiredLease(leaseMap)
-		if unusedClusterErr != nil && expiredLeaseErr != nil {
-			htp.Error(w, http.StatusConflict, "no available or expired clusters found")
-			return
-		}
-		var availableCluster *container.Cluster
-		if unusedCluster != nil {
-			availableCluster = unusedCluster
-		}
-		if expiredLeaseErr == nil {
-			cl, ok := clusterMap.ClusterByName(uuidAndLease.Lease.ClusterName)
-			if !ok {
-				htp.Error(w, http.StatusInternalServerError, "cluster %s has an expired lease but does not exist in GKE", uuidAndLease.Lease.ClusterName)
+		availableCluster, err := searchForFreeCluster(clusterMap, leaseMap)
+		if err != nil {
+			switch e := err.(type) {
+			case errNoAvailableOrExpiredClustersFound:
+				htp.Error(w, http.StatusConflict, "no available clusters found")
+				return
+			case errExpiredLeaseGKEMissing:
+				htp.Error(w, http.StatusInternalServerError, "cluster %s has an expired lease but doesn't exist in GKE", e.clusterName)
+				return
+			default:
+				htp.Error(w, http.StatusInternalServerError, "unknown error %s", e.Error())
 				return
 			}
-			leaseMap.DeleteLease(uuidAndLease.UUID)
-			availableCluster = cl
 		}
 
 		newToken := uuid.NewUUID()
-		kubeConfigBytes, err := createKubeConfigFromCluster(availableCluster)
+		kubeConfig, err := createKubeConfigFromCluster(availableCluster)
 		if err != nil {
-			htp.Error(w, http.StatusInternalServerError, "error creating kubeconfig file for cluster %s (%s)", uuidAndLease.Lease.ClusterName, err)
+			htp.Error(
+				w,
+				http.StatusInternalServerError,
+				"error creating kubeconfig file for cluster %s (%s)",
+				availableCluster.Name,
+				err,
+			)
 			return
 		}
-		kubeConfigStr := base64.StdEncoding.EncodeToString(kubeConfigBytes)
+		kubeConfigStr, err := marshalAndEncodeKubeConfig(kubeConfig)
+		if err != nil {
+			htp.Error(w, http.StatusInternalServerError, "error marshaling & encoding kubeconfig (%s)", err)
+			return
+		}
+
 		resp := createLeaseResp{
 			KubeConfig:  kubeConfigStr,
 			IP:          availableCluster.Endpoint,

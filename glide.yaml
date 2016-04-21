@@ -8,4 +8,3 @@ import:
 - package: k8s.io/kubernetes
   version: ~1.2
 - package: github.com/arschles/assert
-- package: gopkg.in/yaml.v2

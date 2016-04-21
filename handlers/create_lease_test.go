@@ -11,14 +11,19 @@ import (
 	"github.com/arschles/assert"
 	"github.com/deis/k8s-claimer/gke"
 	"github.com/pborman/uuid"
+	container "google.golang.org/api/container/v1"
+	"k8s.io/kubernetes/pkg/api"
 )
 
-func newFakeClusterLister() *gke.FakeClusterLister {
-	return &gke.FakeClusterLister{}
+func newFakeClusterLister(resp *container.ListClustersResponse, err error) *gke.FakeClusterLister {
+	return &gke.FakeClusterLister{
+		Resp: resp,
+		Err:  err,
+	}
 }
 
 func TestCreateLeaseInvalidReq(t *testing.T) {
-	cl := newFakeClusterLister()
+	cl := newFakeClusterLister(nil, nil)
 	slu := newFakeServiceGetterUpdater(nil, nil, nil, nil)
 	hdl := CreateLease(cl, slu, "", "", "")
 	req, err := http.NewRequest("POST", "/lease", bytes.NewReader(nil))
@@ -29,11 +34,18 @@ func TestCreateLeaseInvalidReq(t *testing.T) {
 }
 
 func TestCreateLeaseValidResp(t *testing.T) {
-	t.Skip("FIXME")
-	t.SkipNow()
-	cl := newFakeClusterLister()
-	slu := newFakeServiceGetterUpdater(nil, nil, nil, nil)
-	hdl := CreateLease(cl, slu, "", "", "")
+	cluster := &container.Cluster{
+		Name:       "cluster1",
+		Endpoint:   "192.168.1.1",
+		MasterAuth: &container.MasterAuth{},
+	}
+	clusterLister := newFakeClusterLister(&container.ListClustersResponse{
+		Clusters: []*container.Cluster{cluster},
+	}, nil)
+	services := newFakeServiceGetterUpdater(&api.Service{
+		ObjectMeta: api.ObjectMeta{Name: "service1"},
+	}, nil, nil, nil)
+	hdl := CreateLease(clusterLister, services, "", "", "")
 	reqBody := `{"max_time":30}`
 	req, err := http.NewRequest("POST", "/lease", strings.NewReader(reqBody))
 	assert.NoErr(t, err)
@@ -42,8 +54,12 @@ func TestCreateLeaseValidResp(t *testing.T) {
 	assert.Equal(t, res.Code, http.StatusOK, "response code")
 	leaseResp := new(createLeaseResp)
 	assert.NoErr(t, json.NewDecoder(res.Body).Decode(leaseResp))
-	assert.Equal(t, leaseResp.KubeConfig, "", "returned kubeconfig")
-	assert.Equal(t, leaseResp.IP, "", "returned IP address")
+	expectedKubeCfg, err := createKubeConfigFromCluster(cluster)
+	assert.NoErr(t, err)
+	expectedMarshalledKubeCfg, err := marshalAndEncodeKubeConfig(expectedKubeCfg)
+	assert.NoErr(t, err)
+	assert.Equal(t, leaseResp.KubeConfig, expectedMarshalledKubeCfg, "returned kubeconfig")
+	assert.Equal(t, leaseResp.IP, cluster.Endpoint, "returned IP address")
 	parsedUUID := uuid.Parse(leaseResp.Token)
 	assert.True(t, parsedUUID != nil, "returned token is not a valid uuid")
 }
