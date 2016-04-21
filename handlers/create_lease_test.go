@@ -13,7 +13,7 @@ import (
 	"github.com/deis/k8s-claimer/gke"
 	"github.com/pborman/uuid"
 	container "google.golang.org/api/container/v1"
-	"k8s.io/kubernetes/pkg/api"
+	k8sapi "k8s.io/kubernetes/pkg/api"
 )
 
 func newFakeClusterLister(resp *container.ListClustersResponse, err error) *gke.FakeClusterLister {
@@ -43,8 +43,8 @@ func TestCreateLeaseValidResp(t *testing.T) {
 	clusterLister := newFakeClusterLister(&container.ListClustersResponse{
 		Clusters: []*container.Cluster{cluster},
 	}, nil)
-	services := newFakeServiceGetterUpdater(&api.Service{
-		ObjectMeta: api.ObjectMeta{Name: "service1"},
+	services := newFakeServiceGetterUpdater(&k8sapi.Service{
+		ObjectMeta: k8sapi.ObjectMeta{Name: "service1"},
 	}, nil, nil, nil)
 	hdl := CreateLease(clusterLister, services, "", "", "")
 	reqBody := `{"max_time":30}`
