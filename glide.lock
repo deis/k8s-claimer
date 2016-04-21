@@ -1,5 +1,5 @@
-hash: 2897899614ccf56f1a2559208be0ce2aa44454890add82b08006eeb2155a6ed1
-updated: 2016-04-13T10:56:56.724950967-07:00
+hash: fa076d88f2f18d9a860926831656d5fe7dc3d2053d9d7db582bc316d5180c660
+updated: 2016-04-21T10:14:50.033357113-07:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c
@@ -128,7 +128,7 @@ imports:
   - googleapi
   - googleapi/internal/uritemplates
 - name: google.golang.org/appengine
-  version: b67c870a16a2d58b3afa024461dcc51805f52e9d
+  version: e234e71924d4aa52444bc76f2f831f13fa1eca60
   subpackages:
   - urlfetch
   - internal
@@ -145,6 +145,7 @@ imports:
   - pkg/client/unversioned
   - pkg/api
   - pkg/client/unversioned/clientcmd/api
+  - pkg/labels
   - pkg/api/errors
   - pkg/api/install
   - pkg/api/meta
@@ -171,12 +172,12 @@ imports:
   - pkg/api/resource
   - pkg/auth/user
   - pkg/conversion
-  - pkg/labels
   - pkg/runtime/serializer
   - pkg/types
   - pkg/util
   - pkg/util/intstr
   - pkg/util/rand
+  - pkg/util/validation
   - pkg/util/validation/field
   - pkg/api/v1
   - pkg/apimachinery
@@ -197,7 +198,6 @@ imports:
   - pkg/conversion/queryparams
   - pkg/util/runtime
   - third_party/forked/reflect
-  - pkg/util/validation
   - pkg/runtime/serializer/json
   - pkg/runtime/serializer/recognizer
   - pkg/runtime/serializer/versioning
