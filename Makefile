@@ -27,3 +27,9 @@ docker-build:
 
 deploy-to-deis:
 	${DEIS_BINARY_NAME} pull ${IMAGE} -a ${DEIS_APP_NAME}
+
+build-cli-cross:
+	${DEV_ENV_CMD} gox -output="cli/bin/${SHORT_NAME}-{{.OS}}-{{.Arch}}"
+
+build-cli:
+	go build -o k8s-claimer-cli ./cli
