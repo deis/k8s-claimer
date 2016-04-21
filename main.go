@@ -15,11 +15,11 @@ const (
 	appName = "k8s-claimer"
 )
 
-func configureRoutes(serveMux *http.ServeMux, createLeaseHandler http.Handler, deleteLeaseHandler http.Handler) {
+func configureRoutesWithAuth(serveMux *http.ServeMux, createLeaseHandler http.Handler, deleteLeaseHandler http.Handler, authToken string) {
 	createLeaseHandler = htp.MethodMux(map[htp.Method]http.Handler{htp.Post: createLeaseHandler})
 	deleteLeaseHandler = htp.MethodMux(map[htp.Method]http.Handler{htp.Delete: deleteLeaseHandler})
-	serveMux.Handle("/lease", createLeaseHandler)
-	serveMux.Handle("/lease/", deleteLeaseHandler)
+	serveMux.Handle("/lease", handlers.WithAuth(authToken, "Authorization", createLeaseHandler))
+	serveMux.Handle("/lease/", handlers.WithAuth(authToken, "Authorization", deleteLeaseHandler))
 }
 
 func main() {
@@ -58,7 +58,7 @@ func main() {
 		gCloudConf.Zone,
 	)
 	deleteLeaseHandler := handlers.DeleteLease(services, serverConf.ServiceName, k8sClient.Namespaces())
-	configureRoutes(mux, createLeaseHandler, deleteLeaseHandler)
+	configureRoutesWithAuth(mux, createLeaseHandler, deleteLeaseHandler, serverConf.AuthToken)
 
 	log.Printf("Running %s on %s", appName, serverConf.HostStr())
 	http.ListenAndServe(serverConf.HostStr(), mux)

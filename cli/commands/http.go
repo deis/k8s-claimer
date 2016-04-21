@@ -33,11 +33,12 @@ func (e endpoint) httpReq(body io.Reader) (*http.Request, error) {
 	return http.NewRequest(e.method.String(), fmt.Sprintf("%s/%s", e.host, e.path), body)
 }
 
-func (e endpoint) executeReq(cl *http.Client, body io.Reader) (*http.Response, error) {
+func (e endpoint) executeReq(cl *http.Client, body io.Reader, authToken string) (*http.Response, error) {
 	req, err := e.httpReq(body)
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Authorization", authToken)
 	return cl.Do(req)
 }
 
