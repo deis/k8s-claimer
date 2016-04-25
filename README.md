@@ -35,8 +35,7 @@ description of each.
 package. This is a required field. You can get a JWT file from the Google Cloud Platform console by following these steps:
   - Go to `Permissions`
   - Create a service account if necessary
-  - Click on the vertical three dots on the far right on the service account row you'd like
-    permissions on
+  - Click on the three vertical dots to the far right of the service account row for which you would like permissions
   - Click `Create key`
   - Make sure `JSON` is checked and click `Create`
 - `GOOGLE_CLOUD_PROJECT_ID` - The Google Cloud project ID for the project that holds the GKE clusters to lease. This is a required field
