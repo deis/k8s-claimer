@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -34,7 +35,9 @@ func TestCreateLeaseInvalidReq(t *testing.T) {
 	assert.Equal(t, res.Code, http.StatusBadRequest, "response code")
 }
 
-func TestCreateLeaseValidResp(t *testing.T) {
+func TestCreateLeaseInvalidAuth(t *testing.T) {
+	os.Setenv("AUTH_TOKEN", "some awesome token")
+	defer os.Clearenv()
 	cluster := &container.Cluster{
 		Name:       "cluster1",
 		Endpoint:   "192.168.1.1",
@@ -49,6 +52,31 @@ func TestCreateLeaseValidResp(t *testing.T) {
 	hdl := CreateLease(clusterLister, services, "", "", "")
 	reqBody := `{"max_time":30}`
 	req, err := http.NewRequest("POST", "/lease", strings.NewReader(reqBody))
+	req.Header.Set("Authorization", "different token")
+	assert.NoErr(t, err)
+	res := httptest.NewRecorder()
+	hdl.ServeHTTP(res, req)
+	assert.Equal(t, res.Code, http.StatusUnauthorized, "response code")
+}
+
+func TestCreateLeaseValidResp(t *testing.T) {
+	os.Setenv("AUTH_TOKEN", "some awesome token")
+	defer os.Clearenv()
+	cluster := &container.Cluster{
+		Name:       "cluster1",
+		Endpoint:   "192.168.1.1",
+		MasterAuth: &container.MasterAuth{},
+	}
+	clusterLister := newFakeClusterLister(&container.ListClustersResponse{
+		Clusters: []*container.Cluster{cluster},
+	}, nil)
+	services := newFakeServiceGetterUpdater(&k8sapi.Service{
+		ObjectMeta: k8sapi.ObjectMeta{Name: "service1"},
+	}, nil, nil, nil)
+	hdl := CreateLease(clusterLister, services, "", "", "")
+	reqBody := `{"max_time":30}`
+	req, err := http.NewRequest("POST", "/lease", strings.NewReader(reqBody))
+	req.Header.Set("Authorization", "some awesome token")
 	assert.NoErr(t, err)
 	res := httptest.NewRecorder()
 	hdl.ServeHTTP(res, req)

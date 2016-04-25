@@ -10,6 +10,7 @@ type Server struct {
 	BindPort    int    `envconfig:"BIND_PORT" default:"8080"`
 	Namespace   string `envconfig:"NAMESPACE" default:"k8s-claimer"`
 	ServiceName string `envconfig:"SERVICE_NAME" default:"k8s-claimer"`
+	AuthToken   string `envconfig:"AUTH_TOKEN" required:"true"`
 }
 
 // HostStr returns the full host string for the server, based on s.BindHost and s.BindPort

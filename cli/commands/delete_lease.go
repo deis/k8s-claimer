@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/codegangsta/cli"
 	"github.com/deis/k8s-claimer/htp"
@@ -12,6 +13,11 @@ import (
 
 // DeleteLease is a cli.Command action for deleting a lease
 func DeleteLease(c *cli.Context) {
+	// inspect env for auth env var
+	authToken := os.Getenv("AUTH_TOKEN")
+	if authToken == "" {
+		log.Fatalf("An authorization token is required in the form of an env var AUTH_TOKEN")
+	}
 	server := c.GlobalString("server")
 	if server == "" {
 		log.Fatalf("Server missing")
@@ -21,7 +27,7 @@ func DeleteLease(c *cli.Context) {
 	}
 	leaseToken := c.Args()[0]
 	endpt := newEndpoint(htp.Delete, server, "lease/"+leaseToken)
-	resp, err := endpt.executeReq(getHTTPClient(), nil)
+	resp, err := endpt.executeReq(getHTTPClient(), nil, authToken)
 	if err != nil {
 		log.Fatalf("Error executing %s (%s)", endpt, err)
 	}
