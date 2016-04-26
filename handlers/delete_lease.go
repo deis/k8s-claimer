@@ -7,7 +7,7 @@ import (
 	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/pborman/uuid"
-	api "k8s.io/kubernetes/pkg/api"
+	k8sapi "k8s.io/kubernetes/pkg/api"
 	labels "k8s.io/kubernetes/pkg/labels"
 )
 
@@ -48,7 +48,7 @@ func DeleteLease(services k8s.ServiceGetterUpdater, k8sServiceName string, names
 		}
 
 		// clear all namespaces
-		namespacesList, err := namespaces.List(api.ListOptions{LabelSelector: labels.Everything()})
+		namespacesList, err := namespaces.List(k8sapi.ListOptions{LabelSelector: labels.Everything()})
 		if err != nil {
 			htp.Error(w, http.StatusInternalServerError, "cannot get namespaces (%s)", err)
 			return

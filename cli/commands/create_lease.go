@@ -23,6 +23,11 @@ const (
 
 // CreateLease is a cli.Command action for creating a lease
 func CreateLease(c *cli.Context) {
+	// inspect env for auth env var
+	authToken := os.Getenv("AUTH_TOKEN")
+	if authToken == "" {
+		log.Fatalf("An authorization token is required in the form of an env var AUTH_TOKEN")
+	}
 	server := c.GlobalString("server")
 	if server == "" {
 		log.Fatalf("Server missing")
@@ -49,7 +54,7 @@ func CreateLease(c *cli.Context) {
 	if err := json.NewEncoder(reqBuf).Encode(req); err != nil {
 		log.Fatalf("Error encoding request body (%s)", err)
 	}
-	res, err := endpt.executeReq(getHTTPClient(), reqBuf)
+	res, err := endpt.executeReq(getHTTPClient(), reqBuf, authToken)
 	if err != nil {
 		log.Fatalf("Error executing %s (%s)", endpt, err)
 	}

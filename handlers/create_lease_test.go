@@ -49,6 +49,7 @@ func TestCreateLeaseValidResp(t *testing.T) {
 	hdl := CreateLease(clusterLister, services, "", "", "")
 	reqBody := `{"max_time":30}`
 	req, err := http.NewRequest("POST", "/lease", strings.NewReader(reqBody))
+	req.Header.Set("Authorization", "some awesome token")
 	assert.NoErr(t, err)
 	res := httptest.NewRecorder()
 	hdl.ServeHTTP(res, req)

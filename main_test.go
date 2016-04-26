@@ -73,8 +73,9 @@ func TestConfigureRoutes(t *testing.T) {
 
 	for _, testCase := range testCases {
 		mux := http.NewServeMux()
-		configureRoutes(mux, testCase.postHandler, testCase.deleteHandler)
+		configureRoutesWithAuth(mux, testCase.postHandler, testCase.deleteHandler, "auth token")
 		req, err := http.NewRequest(testCase.method, testCase.path, nil)
+		req.Header.Set("Authorization", "auth token")
 		assert.NoErr(t, err)
 		res := httptest.NewRecorder()
 		mux.ServeHTTP(res, req)
