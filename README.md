@@ -44,6 +44,7 @@ package. This is a required field. You can get a JWT file from the Google Cloud 
 - `BIND_PORT` - The port to bind the server to. Defaults to `8080`
 - `NAMESPACE` - The namespace in which to store lease data (lease data is stored on annotations on a service in this namespace). Defaults to `k8s-claimer`
 - `SERVICE_NAME` - The service on which to store lease data. Defaults to `k8s-claimer`
+- `AUTH_TOKEN` - The authentication token that clients must use to acquire and release leases
 
 
 # API
