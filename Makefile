@@ -2,8 +2,8 @@ SHORT_NAME ?= k8s-claimer
 
 include versioning.mk
 
+VERSION ?= git-$(shell git rev-parse --short HEAD)
 LDFLAGS := "-s -X main.version=${VERSION}"
-
 REPO_PATH := github.com/deis/${SHORT_NAME}
 DEV_ENV_IMAGE := quay.io/deis/go-dev:0.9.1
 DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
