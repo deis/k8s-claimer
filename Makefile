@@ -29,7 +29,7 @@ deploy-to-deis:
 	${DEIS_BINARY_NAME} pull ${IMAGE} -a ${DEIS_APP_NAME}
 
 build-cli-cross:
-	${DEV_ENV_CMD} gox -output="cli/bin/${SHORT_NAME}-{{.OS}}-{{.Arch}}"
+	${DEV_ENV_CMD} gox -output="cli/bin/${SHORT_NAME}-${VERSION}-{{.OS}}-{{.Arch}}"
 
 prep-bintray-json:
 	@jq '.version.name |= "$(VERSION)"' _scripts/ci/bintray-template.json \
