@@ -11,8 +11,19 @@ services:
 install:
 - make bootstrap
 script:
-  - make build test docker-build
+- make build test docker-build
+before_deploy:
+- make dist prep-bintray-json
 deploy:
+  provider: bintray
+  skip_cleanup: true
+  file: _scripts/ci/bintray-ci.json
+  user: deis-admin
+  key:
+    secure: C5gVLvl/xYAo6h3QlC9GO/elYtvifaLjNVUXVRlBt+pd8FXlO/zM1e7vRMoglq8krWdbXfi3xYZlXWWdjQMUnL6fvnXO+rGyRka71qXeJUbg4l4c800sN5oc+O18SLqEfbMHdFWKeCmCwmsWwNBuAyWW7RAwsrUv1ypANbG27lr8KKl8kCLqXz6424EP0JNJpIjbDyulpJONPglZJ8FiE/0IFx1Mj1oFEuO66SnaqLEkGqXYCsU3P0+yePJy89IJtODf4rfE2gvMHXqXqqXfg5HZnNSYpcw93LAJHz7c9GvkoSwdOTw+ZGDQibwAcTkS1DIa/YmTpPvZzQ7ByMvKHuHfBPLGWpm21pWdLQFPCSUVFYBPb9Xx+JG2rW42bTBzP4qyKN8yZf/3H+/ZI3mkL/R36GGspqHX7NscS+U45/e53D31R86eMDRLHKfuX8fUQdhQQEcrTmB6OkAMlGLeOSq240pUOdQMcVACYwQq2Sob90vmHcLQ3V0W+CBTXpKx3/AQ9Ad+15/mJVLwcUbhf12hcgp6qrJbFLR66kmDhuIZuKEyiIN2s2yQPI72vl6F0ujIBjcztjQye2D08E274DSmHZLHFkAXs1cNXQKTxLopti3pY7gA2VN0wIHXsqakRTZRxRTy+c3tHKfwJKCjcFqfOXv/GX9Gn+lS9Azg/VY=
+  on:
+    branch: master
+after_deploy:
   provider: script
   script: _scripts/deploy.sh
   on:

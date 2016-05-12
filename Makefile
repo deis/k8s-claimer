@@ -31,5 +31,11 @@ deploy-to-deis:
 build-cli-cross:
 	${DEV_ENV_CMD} gox -output="cli/bin/${SHORT_NAME}-{{.OS}}-{{.Arch}}"
 
+prep-bintray-json:
+	@jq '.version.name |= "$(VERSION)"' _scripts/ci/bintray-template.json \
+		> _scripts/ci/bintray-ci.json
+
 build-cli:
 	go build -o k8s-claimer-cli ./cli
+
+dist: build-cli-cross
