@@ -11,7 +11,7 @@
   },
   "files": [
     {
-      "includePattern": "bin/(.*)",
+      "includePattern": "cli/bin/(.*)",
       "uploadPattern": "$1"
     }
   ],
