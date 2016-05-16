@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"strings"
 
 	"github.com/deis/k8s-claimer/clusters"
 	"github.com/deis/k8s-claimer/leases"
 	container "google.golang.org/api/container/v1"
+	"gopkg.in/yaml.v2"
 	k8scmd "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
 )
 
@@ -67,9 +67,9 @@ func createKubeConfigFromCluster(cluster *container.Cluster) (*k8scmd.Config, er
 }
 
 func marshalAndEncodeKubeConfig(cfg *k8scmd.Config) (string, error) {
-	cfgBytes, err := json.Marshal(cfg)
+	y, err := yaml.Marshal(cfg)
 	if err != nil {
 		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(cfgBytes), nil
+	return base64.StdEncoding.EncodeToString(y), nil
 }

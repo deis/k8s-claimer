@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"strings"
 	"testing"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/deis/k8s-claimer/testutil"
 	"github.com/pborman/uuid"
 	container "google.golang.org/api/container/v1"
+	"gopkg.in/yaml.v2"
 	k8scmd "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
 )
 
@@ -156,7 +156,7 @@ func TestMarshalAndEncodeKubeConfig(t *testing.T) {
 	decodedBytes, err := base64.StdEncoding.DecodeString(str)
 	assert.NoErr(t, err)
 	decodedCfg := new(k8scmd.Config)
-	assert.NoErr(t, json.Unmarshal(decodedBytes, decodedCfg))
+	assert.NoErr(t, yaml.Unmarshal(decodedBytes, decodedCfg))
 	assert.Equal(t, decodedCfg.APIVersion, cfg.APIVersion, "API version")
 
 }
