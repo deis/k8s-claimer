@@ -6,6 +6,6 @@ import:
   subpackages:
   - container/v1
 - package: k8s.io/kubernetes
-  version: ~1.2
+  version: a24f03c3c99bd305ace7745b7a5749790be060e3
 - package: github.com/arschles/assert
 - package: github.com/codegangsta/cli
