@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/base64"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/pborman/uuid"
 	container "google.golang.org/api/container/v1"
 	"gopkg.in/yaml.v2"
-	k8scmd "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
 )
 
 const (
@@ -70,7 +70,7 @@ func TestFindUnusedGKECluster(t *testing.T) {
 func TestCreateKubeConfigFromCluster(t *testing.T) {
 	cluster := &container.Cluster{
 		Name:     "my cluster",
-		Endpoint: "https://my.k8s.endpoint.com",
+		Endpoint: "my.k8s.endpoint.com",
 		MasterAuth: &container.MasterAuth{
 			ClientCertificate:    "test client cert",
 			ClientKey:            "test client key",
@@ -84,24 +84,19 @@ func TestCreateKubeConfigFromCluster(t *testing.T) {
 	assert.Equal(t, k8sConfig.APIVersion, "v1", "api version")
 	assert.Equal(t, k8sConfig.CurrentContext, strings.ToLower(cluster.Name), "context")
 
-	clusterConfig, clusterConfigFound := k8sConfig.Clusters[cluster.Name]
-	assert.True(t, clusterConfigFound, "cluster %s not found in config", cluster.Name)
-	assert.Equal(t, clusterConfig.Server, cluster.Endpoint, "cluster endpoint")
-	assert.Equal(t, string(clusterConfig.CertificateAuthorityData), cluster.MasterAuth.ClusterCaCertificate, "cluster CA data")
+	namedCluster := k8sConfig.Clusters[0]
+	assert.Equal(t, namedCluster.Cluster.Server, fmt.Sprintf("https://%s", cluster.Endpoint), "cluster endpoint")
+	assert.Equal(t, string(namedCluster.Cluster.CertificateAuthorityData), cluster.MasterAuth.ClusterCaCertificate, "cluster CA data")
 
-	authInfoConfig, authInfoFound := k8sConfig.AuthInfos[strings.ToLower(cluster.Name)]
-	assert.True(t, authInfoFound, "auth info for cluster %s not found in config", cluster.Name)
-	assert.Equal(t, string(authInfoConfig.ClientCertificateData), cluster.MasterAuth.ClientCertificate, "client certificate")
-	assert.Equal(t, string(authInfoConfig.ClientKeyData), cluster.MasterAuth.ClientKey, "client key")
-	assert.Equal(t, authInfoConfig.Username, cluster.MasterAuth.Username, "username")
-	assert.Equal(t, authInfoConfig.Password, cluster.MasterAuth.Password, "password")
+	namedAuthInfo := k8sConfig.AuthInfos[0]
+	assert.Equal(t, string(namedAuthInfo.AuthInfo.ClientCertificateData), cluster.MasterAuth.ClientCertificate, "client certificate")
+	assert.Equal(t, string(namedAuthInfo.AuthInfo.ClientKeyData), cluster.MasterAuth.ClientKey, "client key")
+	assert.Equal(t, namedAuthInfo.AuthInfo.Username, cluster.MasterAuth.Username, "username")
+	assert.Equal(t, namedAuthInfo.AuthInfo.Password, cluster.MasterAuth.Password, "password")
 
-	contextConfig, contextFound := k8sConfig.Contexts[strings.ToLower(cluster.Name)]
-	assert.True(t, contextFound, "context for cluster %s not found in config", cluster.Name)
-	_, clusterFoundFromContext := k8sConfig.Clusters[contextConfig.Cluster]
-	assert.True(t, clusterFoundFromContext, "cluster not found from context.Cluster value %s", contextConfig.Cluster)
-	_, authFoundFromContext := k8sConfig.AuthInfos[contextConfig.AuthInfo]
-	assert.True(t, authFoundFromContext, "auth info not found from context.AuthInfo value %s", contextConfig.AuthInfo)
+	contextConfig := k8sConfig.Contexts[0]
+	assert.Equal(t, contextConfig.Context.Cluster, cluster.Name, "cluster name")
+	assert.Equal(t, contextConfig.Context.AuthInfo, cluster.Name, "auth info name")
 }
 
 type contextClusterAndAuthInfo struct {
@@ -113,50 +108,70 @@ type contextClusterAndAuthInfo struct {
 func TestMarshalAndEncodeKubeConfig(t *testing.T) {
 	const namespace = "myns"
 	const locationOfOrigin = "myloc"
-	cfg := &k8scmd.Config{
-		APIVersion: kubeconfigAPIVersion,
-		Clusters:   map[string]*k8scmd.Cluster{},
-		AuthInfos:  map[string]*k8scmd.AuthInfo{},
-		Contexts:   map[string]*k8scmd.Context{},
-	}
 
 	contextNames := []string{"ctx1", "ctx2", "ctx3"}
 	clusterNames := []string{"cluster1", "cluster2", "cluster3"}
 	authInfoNames := []string{"authInfo1", "authInfo2", "authInfo3"}
+
+	var contexts []NamedContext
 	for i, contextName := range contextNames {
-		cfg.CurrentContext = contextName
-		cfg.Contexts[contextName] = &k8scmd.Context{
-			LocationOfOrigin: locationOfOrigin,
-			Cluster:          clusterNames[i],
-			AuthInfo:         authInfoNames[i],
-			Namespace:        namespace,
+		context := Context{
+			Cluster:   clusterNames[i],
+			AuthInfo:  authInfoNames[i],
+			Namespace: namespace,
 		}
+		namedContext := NamedContext{
+			Name:    contextName,
+			Context: context,
+		}
+		contexts = append(contexts, namedContext)
 	}
+
+	var clusters []NamedCluster
 	for _, clusterName := range clusterNames {
-		cfg.Clusters[clusterName] = &k8scmd.Cluster{
-			LocationOfOrigin:         locationOfOrigin,
+		cluster := Cluster{
 			Server:                   clusterName + "/server",
 			APIVersion:               kubeconfigAPIVersion,
 			InsecureSkipTLSVerify:    false,
-			CertificateAuthorityData: []byte(clusterName + "_cert_authority"),
+			CertificateAuthorityData: clusterName + "_cert_authority",
 		}
+		namedCluster := NamedCluster{
+			Name:    clusterName,
+			Cluster: cluster,
+		}
+		clusters = append(clusters, namedCluster)
 	}
+
+	var authInfos []NamedAuthInfo
 	for _, authInfoName := range authInfoNames {
-		cfg.AuthInfos[authInfoName] = &k8scmd.AuthInfo{
-			LocationOfOrigin:      locationOfOrigin,
-			ClientCertificateData: []byte(authInfoName + "_cert_data"),
-			ClientKeyData:         []byte(authInfoName + "_key_data"),
-			Token:                 authInfoName + "_bearer_token",
+		authInfo := AuthInfo{
+			ClientCertificateData: authInfoName + "_cert_data",
+			ClientKeyData:         authInfoName + "_key_data",
 			Username:              authInfoName + "_username",
 			Password:              authInfoName + "_password",
+			Token:                 authInfoName + "_bearer_token",
 		}
+		namedAuthInfo := NamedAuthInfo{
+			Name:     authInfoName,
+			AuthInfo: authInfo,
+		}
+		authInfos = append(authInfos, namedAuthInfo)
 	}
-	str, err := marshalAndEncodeKubeConfig(cfg)
+
+	cfg := &Config{
+		CurrentContext: "ctx1",
+		Clusters:       clusters,
+		Contexts:       contexts,
+		AuthInfos:      authInfos,
+	}
+
+	yamlString, err := marshalAndEncodeKubeConfig(cfg)
 	assert.NoErr(t, err)
-	decodedBytes, err := base64.StdEncoding.DecodeString(str)
+	decodedBytes, err := base64.StdEncoding.DecodeString(yamlString)
 	assert.NoErr(t, err)
-	decodedCfg := new(k8scmd.Config)
+	decodedCfg := new(Config)
 	assert.NoErr(t, yaml.Unmarshal(decodedBytes, decodedCfg))
 	assert.Equal(t, decodedCfg.APIVersion, cfg.APIVersion, "API version")
-
+	assert.Equal(t, decodedCfg.AuthInfos[0].AuthInfo.ClientCertificateData, cfg.AuthInfos[0].AuthInfo.ClientCertificateData,
+		"authInfo1_cert_data")
 }
