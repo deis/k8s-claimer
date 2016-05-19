@@ -93,3 +93,7 @@ func TestConfigureRoutes(t *testing.T) {
 		)
 	}
 }
+
+func TestKubeNamespacesFromConfig(t *testing.T) {
+	t.Skip("TODO")
+}
