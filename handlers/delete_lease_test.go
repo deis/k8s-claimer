@@ -130,6 +130,16 @@ func TestDeleteLeaseExists(t *testing.T) {
 			t.Errorf("trial %d: status code for path %s was %d, not %d", i, path, res.Code, http.StatusOK)
 			continue
 		}
-		// TODO: ensure namespaces were deleted
+		// ensure namespaces were deleted
+		assert.Equal(t, len(nsListerDeleter.NsDeleted), len(namespaces)-len(skipDeleteNamespaces), "number of deleted namespaces")
+		nsMap := map[string]struct{}{}
+		for _, ns := range namespaces {
+			nsMap[ns] = struct{}{}
+		}
+		for _, deletedNS := range nsListerDeleter.NsDeleted {
+			if _, ok := nsMap[deletedNS]; !ok {
+				t.Errorf("namespace %s was deleted but wasn't in the original namespace list", deletedNS)
+			}
+		}
 	}
 }
