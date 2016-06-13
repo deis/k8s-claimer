@@ -13,15 +13,13 @@ install:
 script:
 - make build test docker-build
 before_deploy:
-- make dist prep-bintray-json
+- make dist
 deploy:
-  provider: bintray
-  skip_cleanup: true
-  file: _scripts/ci/bintray-ci.json
-  user: deis-admin
-  key:
-    secure: "kzglJzqZ6HgmlQQouonlCrQfj9HG1rdpZ6XvdV222ocVkgOpz0u8G3oGhoW0bNadAEKvd/gGlFeuc1W1C3vBw2r6nXhOiTKWGUKpAXL9ZXDywgmaBrTf24W5cUHZPd7EvIq5nqDt4recDMOfMnBu5oyzDg96Mp6EcbF594pJowCYJdybME7SvQYwPl3dAIFh/K+6oy2d5NitwNS582WF5YamnIR9aCzZtk2iEHBWOMh2OqRE5SvOzIm7XE4+aI2Csfwvji5OMYVEpwaVoX1YUpT6+OyRiKDbsmQYQRQ56TbanH0RYIfM44luckOdiW5YcB6mYo7PkXEyx2+MF1XRsJMiGuMDRNlar6oFd9qnGuOF14alezN/zhRFHz2h+Zw5M8VIj28+22M2600U5bF4KeAiVrd2myZST2VC2KTHDR4ZL6M/L/rUfOC6kLpbj9RdYhG4ReyGrpm48M1+WHxyBVYpnIJh7XQQw/0qtvFhYtW7HrpA4Drxh+6zd+wrja2aJ2qwXzWB6S9rYkPsorwe77dBKCWpYaKT3a53BQ922ePTNabgwkvI4w/OzdlrtOrZiJQzdvNa0N8q9wkNmYSd8ydCUJskoQkvehh0dxI7p2M0JNyEmlBTSyp8odv7OO4CEAcn2cHKwulu6sPrxOkdoQPFd6SwzT+pk57UAlOpD/s="
+  provider: gcs
+  access-key-id:
+  secret-access-key:
+  bucket: k8s-claimer
+  local-dir: _dist
   on:
     branch: master
-after_deploy:
-- _scripts/deploy.sh
+  acl: public-read

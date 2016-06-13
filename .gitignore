@@ -28,3 +28,4 @@ rootfs/bin
 cli/bin
 k8s-claimer-cli
 kubeconfig.yaml
+_dist

@@ -3,7 +3,7 @@ SHORT_NAME ?= k8s-claimer
 include versioning.mk
 
 VERSION ?= git-$(shell git rev-parse --short HEAD)
-LDFLAGS := "-s -X main.version=${VERSION}"
+LDFLAGS := -ldflags "-s -X main.version=${VERSION}"
 REPO_PATH := github.com/deis/${SHORT_NAME}
 DEV_ENV_IMAGE := quay.io/deis/go-dev:0.13.0
 DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
@@ -11,6 +11,9 @@ DEV_ENV_PREFIX := docker run --rm -e GO15VENDOREXPERIMENT=1 -v ${CURDIR}:${DEV_E
 DEV_ENV_CMD := ${DEV_ENV_PREFIX} ${DEV_ENV_IMAGE}
 
 DEIS_BINARY_NAME ?= ./deis
+
+DIST_DIR := _dist
+BINARY_NAME := k8s-claimer
 
 bootstrap:
 	${DEV_ENV_CMD} glide install
@@ -29,11 +32,12 @@ deploy-to-deis:
 	${DEIS_BINARY_NAME} pull ${IMAGE} -a ${DEIS_APP_NAME}
 
 build-cli-cross:
-	${DEV_ENV_CMD} gox -output="cli/bin/${SHORT_NAME}-cli_${VERSION}_{{.OS}}-{{.Arch}}" ./cli
-
-prep-bintray-json:
-	@jq '.version.name |= "$(VERSION)"' _scripts/ci/bintray-template.json \
-		> _scripts/ci/bintray-ci.json
+	${DEV_ENV_CMD} gox -verbose ${LDFLAGS} -os="linux darwin " -arch="amd64 386" -output="${DIST_DIR}/${BINARY_NAME}-latest-{{.OS}}-{{.Arch}}" ./cli
+ifdef TRAVIS_TAG
+	${DEV_ENV_CMD} gox -verbose ${LDFLAGS} -os="linux darwin" -arch="amd64 386" -output="${DIST_DIR}/${TRAVIS_TAG}/${BINARY_NAME}-${TRAVIS_TAG}-{{.OS}}-{{.Arch}}" ./cli
+else
+	${DEV_ENV_CMD} gox -verbose ${LDFLAGS} -os="linux darwin" -arch="amd64 386" -output="${DIST_DIR}/${VERSION}/${BINARY_NAME}-${VERSION}-{{.OS}}-{{.Arch}}" ./cli
+endif
 
 build-cli:
 	go build -o k8s-claimer-cli ./cli
