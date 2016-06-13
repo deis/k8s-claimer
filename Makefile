@@ -19,7 +19,7 @@ bootstrap:
 	${DEV_ENV_CMD} glide install
 
 build:
-	${DEV_ENV_PREFIX} -e CGO_ENABLED=0 ${DEV_ENV_IMAGE} go build -a -installsuffix cgo -ldflags ${LDFLAGS} -o rootfs/bin/boot
+	${DEV_ENV_PREFIX} -e CGO_ENABLED=0 ${DEV_ENV_IMAGE} go build -a -installsuffix cgo ${LDFLAGS} -o rootfs/bin/boot
 
 test:
 	${DEV_ENV_CMD} sh -c 'go test $$(glide nv)'
