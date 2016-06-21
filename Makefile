@@ -26,7 +26,7 @@ test:
 
 docker-build:
 	docker build --rm -t ${IMAGE} rootfs
-	docker tag -f ${IMAGE} ${MUTABLE_IMAGE}
+	docker tag ${IMAGE} ${MUTABLE_IMAGE}
 
 deploy-to-deis:
 	${DEIS_BINARY_NAME} pull ${IMAGE} -a ${DEIS_APP_NAME}
