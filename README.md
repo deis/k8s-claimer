@@ -1,7 +1,7 @@
 # k8s-claimer
 
 [![Build Status](https://travis-ci.org/deis/k8s-claimer.svg?branch=master)](https://travis-ci.org/deis/k8s-claimer)
-[![Go Report Card](http://goreportcard.com/badge/deis/k8s-claimer)](http://goreportcard.com/report/deis/k8s-claimer)
+[![Go Report Card](https://goreportcard.com/badge/github.com/deis/k8s-claimer)](https://goreportcard.com/report/github.com/deis/k8s-claimer)
 [![Docker Repository on Quay](https://quay.io/repository/deisci/k8s-claimer/status "Docker Repository on Quay")](https://quay.io/repository/deisci/k8s-claimer)
 
 CLI Downloads:
