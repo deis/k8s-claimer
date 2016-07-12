@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/arschles/assert"
+	"github.com/deis/k8s-claimer/handlers"
 )
 
 type configureRoutesTestCase struct {
@@ -95,5 +96,26 @@ func TestConfigureRoutes(t *testing.T) {
 }
 
 func TestKubeNamespacesFromConfig(t *testing.T) {
-	t.Skip("TODO")
+	fn := kubeNamespacesFromConfig()
+	ld, err := fn(nil)
+	assert.Nil(t, ld, "namespace lister/deleter")
+	assert.Err(t, err, errNilConfig)
+	cfg := handlers.Config{
+		Kind:        "config",
+		APIVersion:  "v1",
+		Preferences: handlers.Preferences{},
+		Clusters: []handlers.NamedCluster{
+			handlers.NamedCluster{Name: "testCluster1"},
+		},
+		AuthInfos: []handlers.NamedAuthInfo{
+			handlers.NamedAuthInfo{Name: "testAuthInfo1"},
+		},
+		Contexts: []handlers.NamedContext{
+			handlers.NamedContext{Name: "testContext1"},
+		},
+		CurrentContext: "testctx",
+	}
+	ld, err = fn(&cfg)
+	assert.NoErr(t, err)
+	assert.NotNil(t, ld, "namespace lister/deleter")
 }
