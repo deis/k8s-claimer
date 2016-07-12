@@ -24,6 +24,8 @@ func (e errDeleteNamespaces) Error() string {
 	return fmt.Sprintf("error deleting namespaces (%+v)", e.origErrs)
 }
 
+// deleteNamespaces deletes all namespaces listed under all labels in namespaces.List, except for
+// the namespaces in skip, "kube-system" and "default"
 func deleteNamespaces(namespaces k8s.NamespaceListerDeleter, skip map[string]struct{}) error {
 	namespacesList, err := namespaces.List(k8sapi.ListOptions{LabelSelector: labels.Everything()})
 	if err != nil {
