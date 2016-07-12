@@ -115,6 +115,7 @@ func TestDeleteLeaseExists(t *testing.T) {
 			nsList.Items = append(nsList.Items, api.Namespace{ObjectMeta: api.ObjectMeta{Name: namespace}})
 		}
 
+		listClusterResp := newListClusterResp(clusterNames)
 		clusterLister := newFakeClusterLister(listClusterResp, nil)
 		nsListerDeleter := newFakeNamespaceListerDeleter(&nsList, nil, nil)
 		hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", getNSFunc(nsListerDeleter, nil))

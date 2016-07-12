@@ -29,6 +29,18 @@ var (
 	}
 )
 
+func newListClusterResp(clusterNames []string) *container.ListClustersResponse {
+	resp := &container.ListClustersResponse{Clusters: make([]*container.Cluster, len(clusterNames))}
+	for i, clusterName := range clusterNames {
+		resp.Clusters[i] = &container.Cluster{
+			Name:       clusterName,
+			Endpoint:   "192.168.1.1",
+			MasterAuth: &container.MasterAuth{},
+		}
+	}
+	return resp
+}
+
 func newFakeClusterLister(resp *container.ListClustersResponse, err error) *gke.FakeClusterLister {
 	return &gke.FakeClusterLister{
 		Resp: resp,
