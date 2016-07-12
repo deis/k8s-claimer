@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
@@ -17,8 +18,15 @@ const (
 	authTokenKey = "Authorization"
 )
 
+var (
+	errNilConfig = errors.New("nil config")
+)
+
 func kubeNamespacesFromConfig() func(*handlers.Config) (k8s.NamespaceListerDeleter, error) {
 	return func(conf *handlers.Config) (k8s.NamespaceListerDeleter, error) {
+		if conf == nil {
+			return nil, errNilConfig
+		}
 		cl, err := handlers.CreateKubeClientFromConfig(conf)
 		if err != nil {
 			return nil, err
