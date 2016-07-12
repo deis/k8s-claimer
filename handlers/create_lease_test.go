@@ -22,11 +22,7 @@ var (
 		Endpoint:   "192.168.1.1",
 		MasterAuth: &container.MasterAuth{},
 	}
-	listClusterResp = &container.ListClustersResponse{
-		Clusters: []*container.Cluster{
-			cluster,
-		},
-	}
+	listClusterResp = newListClusterResp([]string{"cluster1"})
 )
 
 func newListClusterResp(clusterNames []string) *container.ListClustersResponse {
