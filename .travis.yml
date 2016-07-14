@@ -11,7 +11,7 @@ services:
 install:
 - make bootstrap
 script:
-- make build test docker-build
+- make test-cover build docker-build
 before_deploy:
 - make dist
 deploy:
@@ -25,3 +25,6 @@ deploy:
   on:
     branch: master
   acl: public-read
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash

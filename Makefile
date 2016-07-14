@@ -24,6 +24,9 @@ build:
 test:
 	${DEV_ENV_CMD} sh -c 'go test $$(glide nv)'
 
+test-cover:
+	${DEV_ENV_CMD} test-cover.sh
+
 docker-build:
 	docker build --rm -t ${IMAGE} rootfs
 	docker tag ${IMAGE} ${MUTABLE_IMAGE}
