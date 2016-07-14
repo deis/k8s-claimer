@@ -16,6 +16,27 @@ import (
 	k8sapi "k8s.io/kubernetes/pkg/api"
 )
 
+var (
+	cluster = &container.Cluster{
+		Name:       "cluster1",
+		Endpoint:   "192.168.1.1",
+		MasterAuth: &container.MasterAuth{},
+	}
+	listClusterResp = newListClusterResp([]string{"cluster1"})
+)
+
+func newListClusterResp(clusterNames []string) *container.ListClustersResponse {
+	resp := &container.ListClustersResponse{Clusters: make([]*container.Cluster, len(clusterNames))}
+	for i, clusterName := range clusterNames {
+		resp.Clusters[i] = &container.Cluster{
+			Name:       clusterName,
+			Endpoint:   "192.168.1.1",
+			MasterAuth: &container.MasterAuth{},
+		}
+	}
+	return resp
+}
+
 func newFakeClusterLister(resp *container.ListClustersResponse, err error) *gke.FakeClusterLister {
 	return &gke.FakeClusterLister{
 		Resp: resp,
@@ -35,14 +56,7 @@ func TestCreateLeaseInvalidReq(t *testing.T) {
 }
 
 func TestCreateLeaseValidResp(t *testing.T) {
-	cluster := &container.Cluster{
-		Name:       "cluster1",
-		Endpoint:   "192.168.1.1",
-		MasterAuth: &container.MasterAuth{},
-	}
-	clusterLister := newFakeClusterLister(&container.ListClustersResponse{
-		Clusters: []*container.Cluster{cluster},
-	}, nil)
+	clusterLister := newFakeClusterLister(listClusterResp, nil)
 	services := newFakeServiceGetterUpdater(&k8sapi.Service{
 		ObjectMeta: k8sapi.ObjectMeta{Name: "service1"},
 	}, nil, nil, nil)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/deis/k8s-claimer/gke"
 	"github.com/deis/k8s-claimer/handlers"
 	"github.com/deis/k8s-claimer/htp"
+	"github.com/deis/k8s-claimer/k8s"
 	kcl "k8s.io/kubernetes/pkg/client/unversioned"
 )
 
@@ -16,7 +18,25 @@ const (
 	authTokenKey = "Authorization"
 )
 
-func configureRoutesWithAuth(serveMux *http.ServeMux, createLeaseHandler http.Handler, deleteLeaseHandler http.Handler, authToken string) {
+var (
+	errNilConfig = errors.New("nil config")
+)
+
+func kubeNamespacesFromConfig() func(*handlers.Config) (k8s.NamespaceListerDeleter, error) {
+	return func(conf *handlers.Config) (k8s.NamespaceListerDeleter, error) {
+		if conf == nil {
+			return nil, errNilConfig
+		}
+		cl, err := handlers.CreateKubeClientFromConfig(conf)
+		if err != nil {
+			return nil, err
+		}
+		return cl.Namespaces(), nil
+	}
+}
+
+func configureRoutesWithAuth(serveMux *http.ServeMux, createLeaseHandler http.Handler, deleteLeaseHandler http.Handler, authToken string,
+) {
 	createLeaseHandler = htp.MethodMux(map[htp.Method]http.Handler{htp.Post: createLeaseHandler})
 	deleteLeaseHandler = htp.MethodMux(map[htp.Method]http.Handler{htp.Delete: deleteLeaseHandler})
 	serveMux.Handle("/lease", handlers.WithAuth(authToken, authTokenKey, createLeaseHandler))
@@ -50,15 +70,24 @@ func main() {
 	}
 
 	services := k8sClient.Services(serverConf.Namespace)
+	gkeClusterLister := gke.NewGKEClusterLister(containerService)
 	mux := http.NewServeMux()
 	createLeaseHandler := handlers.CreateLease(
-		gke.NewGKEClusterLister(containerService),
+		gkeClusterLister,
 		services,
 		serverConf.ServiceName,
 		gCloudConf.ProjectID,
 		gCloudConf.Zone,
 	)
-	deleteLeaseHandler := handlers.DeleteLease(services, serverConf.ServiceName, k8sClient.Namespaces())
+	deleteLeaseHandler := handlers.DeleteLease(
+		services,
+		gkeClusterLister,
+		serverConf.ServiceName,
+		gCloudConf.ProjectID,
+		gCloudConf.Zone,
+		serverConf.ClearNamespaces,
+		kubeNamespacesFromConfig(),
+	)
 	configureRoutesWithAuth(mux, createLeaseHandler, deleteLeaseHandler, serverConf.AuthToken)
 
 	log.Printf("Running %s on %s", appName, serverConf.HostStr())

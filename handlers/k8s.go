@@ -7,10 +7,14 @@ import (
 	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/client/restclient"
+	kcl "k8s.io/kubernetes/pkg/client/unversioned"
 )
 
 var (
-	errNoExpiredLeases = errors.New("no expired leases exist")
+	errNoExpiredLeases     = errors.New("no expired leases exist")
+	errNoClustersInConfig  = errors.New("no clusters in config")
+	errNoAuthInfosInConfig = errors.New("no auth info in config")
 )
 
 // findExpiredLease searches in the leases in the svc annotations and returns the cluster name of
@@ -44,4 +48,30 @@ func saveAnnotations(services k8s.ServiceUpdater, svc *api.Service, leaseMap *le
 		return err
 	}
 	return nil
+}
+
+// CreateKubeClientFromConfig creates a new Kubernetes client from the given configuration.
+// returns nil and the appropriate error if the client couldn't be created for any reason
+func CreateKubeClientFromConfig(conf *Config) (*kcl.Client, error) {
+	rcConf := new(restclient.Config)
+	if len(conf.Clusters) < 1 {
+		return nil, errNoClustersInConfig
+	}
+	cluster := conf.Clusters[0].Cluster
+	if len(conf.AuthInfos) < 1 {
+		return nil, errNoAuthInfosInConfig
+	}
+	authInfo := conf.AuthInfos[0].AuthInfo
+
+	rcConf.Host = cluster.Server
+	rcConf.Username = authInfo.Username
+	rcConf.Password = authInfo.Password
+	rcConf.TLSClientConfig.CertData = []byte(authInfo.ClientCertificateData)
+	rcConf.TLSClientConfig.KeyData = []byte(authInfo.ClientKeyData)
+	rcConf.TLSClientConfig.CAData = []byte(cluster.CertificateAuthorityData)
+	rcConf.BearerToken = authInfo.Token
+	rcConf.UserAgent = "k8s-claimer"
+	rcConf.Insecure = cluster.InsecureSkipTLSVerify
+
+	return kcl.New(rcConf)
 }
