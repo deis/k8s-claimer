@@ -24,6 +24,7 @@ func DeleteLease(
 	k8sServiceName string,
 	projID,
 	zone string,
+	clearNamespaces bool,
 	nsFunc func(*Config) (k8s.NamespaceListerDeleter, error),
 ) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -72,14 +73,16 @@ func DeleteLease(
 			return
 		}
 
-		namespaces, err := nsFunc(cfg)
-		if err != nil {
-			htp.Error(w, http.StatusInternalServerError, "couldn't create namespaces lister/deleter implementation  (%s)", err)
-			return
-		}
-		if err := deleteNamespaces(namespaces, skipDeleteNamespaces); err != nil {
-			htp.Error(w, http.StatusInternalServerError, "error deleting namespaces (%s)", err)
-			return
+		if clearNamespaces {
+			namespaces, err := nsFunc(cfg)
+			if err != nil {
+				htp.Error(w, http.StatusInternalServerError, "couldn't create namespaces lister/deleter implementation  (%s)", err)
+				return
+			}
+			if err := deleteNamespaces(namespaces, skipDeleteNamespaces); err != nil {
+				htp.Error(w, http.StatusInternalServerError, "error deleting namespaces (%s)", err)
+				return
+			}
 		}
 
 		if err := saveAnnotations(services, svc, leaseMap); err != nil {

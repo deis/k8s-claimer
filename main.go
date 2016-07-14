@@ -85,6 +85,7 @@ func main() {
 		serverConf.ServiceName,
 		gCloudConf.ProjectID,
 		gCloudConf.Zone,
+		serverConf.ClearNamespaces,
 		kubeNamespacesFromConfig(),
 	)
 	configureRoutesWithAuth(mux, createLeaseHandler, deleteLeaseHandler, serverConf.AuthToken)
