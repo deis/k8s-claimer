@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"math/rand"
+	"regexp"
 	"strings"
 
 	"github.com/deis/k8s-claimer/clusters"
@@ -101,14 +103,44 @@ type AuthProviderConfig struct {
 }
 
 // findUnusedGKECluster finds a GKE cluster that's not currently in use according to the
-// annotations in svc. returns errUnusedGKEClusterNotFound if none is found
-func findUnusedGKECluster(clusterMap *clusters.Map, leaseMap *leases.Map) (*container.Cluster, error) {
+// annotations in svc. It will also attempt to match the clusterRegex passed in if possible.
+// Returns errUnusedGKEClusterNotFound if none is found
+func findUnusedGKECluster(clusterMap *clusters.Map, leaseMap *leases.Map, clusterRegex string) (*container.Cluster, error) {
+	if clusterRegex != "" {
+		return findUnusuedGKEClusterByName(clusterMap, leaseMap, clusterRegex)
+	}
+	return findRandomUnusuedGKECluster(clusterMap, leaseMap)
+}
+
+// findUnusuedGKEClusterByName attempts to find a unused GKE cluster that matches the regex passed in via the cli.
+func findUnusuedGKEClusterByName(clusterMap *clusters.Map, leaseMap *leases.Map, clusterRegex string) (*container.Cluster, error) {
+	regex, err := regexp.Compile(clusterRegex)
+	if err != nil {
+		return nil, err
+	}
+	for _, clusterName := range clusterMap.Names() {
+		if regex.MatchString(clusterName) {
+			cluster, _ := clusterMap.ClusterByName(clusterName)
+			_, found := leaseMap.LeaseByClusterName(clusterName)
+			if !found {
+				return cluster, nil
+			}
+		}
+	}
+	return nil, errUnusedGKEClusterNotFound
+}
+
+// findUnusuedGKECluster attempts to find a random unused GKE cluster
+func findRandomUnusuedGKECluster(clusterMap *clusters.Map, leaseMap *leases.Map) (*container.Cluster, error) {
 	clusterNames := clusterMap.Names()
-	for _, clusterName := range clusterNames {
-		cluster, _ := clusterMap.ClusterByName(clusterName)
-		_, found := leaseMap.LeaseByClusterName(clusterName)
-		if !found {
-			return cluster, nil
+	for tries := 0; tries < 10; tries++ {
+		if len(clusterNames) > 0 {
+			clusterName := clusterNames[rand.Intn(len(clusterNames))]
+			cluster, _ := clusterMap.ClusterByName(clusterName)
+			_, found := leaseMap.LeaseByClusterName(clusterName)
+			if !found {
+				return cluster, nil
+			}
 		}
 	}
 	return nil, errUnusedGKEClusterNotFound

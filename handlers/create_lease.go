@@ -102,7 +102,7 @@ func CreateLease(
 			return
 		}
 
-		availableCluster, err := searchForFreeCluster(clusterMap, leaseMap)
+		availableCluster, err := searchForFreeCluster(clusterMap, leaseMap, req.ClusterRegex)
 		if err != nil {
 			switch e := err.(type) {
 			case errNoAvailableOrExpiredClustersFound:

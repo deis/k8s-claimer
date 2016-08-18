@@ -49,6 +49,11 @@ The Kubeconfig file will be written to kubeconfig-file
 							Value: "./kubeconfig.yaml",
 							Usage: "The location of the resulting Kubeconfig file",
 						},
+						cli.StringFlag{
+							Name:  "cluster-regex",
+							Value: "",
+							Usage: "A regular expression that will be used to match which cluster you lease",
+						},
 					},
 				},
 				cli.Command{
