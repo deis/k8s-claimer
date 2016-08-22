@@ -44,7 +44,7 @@ func TestFindUnusedGKECluster(t *testing.T) {
 	)
 	leaseMap, err := leases.ParseMapFromAnnotations(rawAnnotations)
 	assert.NoErr(t, err)
-	unusedCluster, err := findUnusedGKECluster(clusterMap, leaseMap)
+	unusedCluster, err := findUnusedGKECluster(clusterMap, leaseMap, "")
 	assert.True(t, unusedCluster == nil, "unused cluster returned non-nil when all clusters were in use")
 	assert.Err(t, errUnusedGKEClusterNotFound, err)
 
@@ -62,7 +62,10 @@ func TestFindUnusedGKECluster(t *testing.T) {
 	deleted := leaseMap.DeleteLease(freedUUID)
 	assert.True(t, deleted, "lease for cluster %s was not deleted", freedLease.ClusterName)
 
-	unusedCluster, err = findUnusedGKECluster(clusterMap, leaseMap)
+	// Test leasing a cluster by Name
+	// We will use the name of the freedCluster to lease it again
+	// This should help us from creating a leaky test
+	unusedCluster, err = findUnusedGKECluster(clusterMap, leaseMap, freedLease.ClusterName)
 	assert.NoErr(t, err)
 	assert.Equal(t, unusedCluster.Name, freedLease.ClusterName, "free cluster name")
 }

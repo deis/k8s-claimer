@@ -2,9 +2,9 @@ package: github.com/deis/k8s-claimer
 import:
 - package: github.com/kelseyhightower/envconfig
 - package: github.com/pborman/uuid
-- package: google.golang.org/api
+- package: cloud.google.com/go
   subpackages:
-  - container/v1
+  - container
 - package: k8s.io/kubernetes
   version: a24f03c3c99bd305ace7745b7a5749790be060e3
 - package: github.com/arschles/assert

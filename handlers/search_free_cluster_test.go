@@ -21,7 +21,7 @@ func TestSearchForFreeClusterNoneAvailable(t *testing.T) {
 	clusterLister := gke.FakeClusterLister{Err: nil, Resp: &container.ListClustersResponse{Clusters: nil}}
 	clusterMap, err := clusters.ParseMapFromGKE(clusterLister, "", "")
 	assert.NoErr(t, err)
-	cluster, err := searchForFreeCluster(clusterMap, leaseMap)
+	cluster, err := searchForFreeCluster(clusterMap, leaseMap, "")
 	assert.Nil(t, cluster, "cluster")
 	switch tErr := err.(type) {
 	case errNoAvailableOrExpiredClustersFound:
@@ -43,7 +43,7 @@ func TestSearchForClusterNoLeaseFound(t *testing.T) {
 	}
 	clusterMap, err := clusters.ParseMapFromGKE(clusterLister, "", "")
 	assert.NoErr(t, err)
-	cluster, err := searchForFreeCluster(clusterMap, leaseMap)
+	cluster, err := searchForFreeCluster(clusterMap, leaseMap, "")
 	assert.Nil(t, cluster, "cluster")
 	switch tErr := err.(type) {
 	case errExpiredLeaseGKEMissing:

@@ -10,7 +10,8 @@ import (
 // CreateLeaseReq is the encoding/json compatible struct that represents the POST /lease
 // request body
 type CreateLeaseReq struct {
-	MaxTimeSec int `json:"max_time"`
+	MaxTimeSec   int    `json:"max_time"`
+	ClusterRegex string `json:"cluster_regex"`
 }
 
 // MaxTimeDur returns the maximum time specified in c as a time.Duration

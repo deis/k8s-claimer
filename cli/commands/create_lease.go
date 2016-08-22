@@ -39,6 +39,7 @@ func CreateLease(c *cli.Context) error {
 		log.Fatalf("Invalid duration %d", durationSec)
 	}
 	envPrefix := c.String("env-prefix")
+	clusterRegex := c.String("cluster-regex")
 	kcfgFile := c.String("kubeconfig-file")
 	if len(kcfgFile) < 1 {
 		log.Fatalf("Missing kubeconfig-file")
@@ -54,7 +55,7 @@ func CreateLease(c *cli.Context) error {
 
 	endpt := newEndpoint(htp.Post, server, "lease")
 	reqBuf := new(bytes.Buffer)
-	req := api.CreateLeaseReq{MaxTimeSec: durationSec}
+	req := api.CreateLeaseReq{MaxTimeSec: durationSec, ClusterRegex: clusterRegex}
 	if encErr := json.NewEncoder(reqBuf).Encode(req); encErr != nil {
 		log.Fatalf("Error encoding request body (%s)", err)
 		return err
