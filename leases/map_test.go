@@ -12,7 +12,7 @@ import (
 
 func TestParseMapFromAnnotations(t *testing.T) {
 	rawAnnotations := testutil.GetRawAnnotations(
-		testutil.GetClusterNames(),
+		testutil.GetClusters(),
 		TimeFormat,
 		testutil.DefaultTimeFunc,
 		testutil.DefaultUUIDFunc,
@@ -27,28 +27,26 @@ func TestParseMapFromAnnotations(t *testing.T) {
 }
 
 func TestLeaseByClusterName(t *testing.T) {
-	clusterNames := testutil.GetClusterNames()
+	leaseableClusters := testutil.GetClusters()
 	rawAnnotations := testutil.GetRawAnnotations(
-		clusterNames,
+		leaseableClusters,
 		TimeFormat,
 		testutil.DefaultTimeFunc,
 		testutil.DefaultUUIDFunc,
 	)
 	m, err := ParseMapFromAnnotations(rawAnnotations)
 	assert.NoErr(t, err)
-	l, found := m.LeaseByClusterName("no such cluster")
-	assert.True(t, l == nil, "lease returned when nil expected")
+	l, found := m.LeaseByClusterName("non-exsistent-cluster")
+	assert.Nil(t, l, "lease returned when nil expected")
 	assert.False(t, found, "found reported true when false expected")
-	for _, clusterName := range clusterNames {
-		l, found := m.LeaseByClusterName(clusterName)
-		assert.Equal(t, l.ClusterName, clusterName, "cluster name")
-		assert.True(t, found, "found reported false for lease %s, expected true", clusterName)
-	}
+	l, found = m.LeaseByClusterName("cluster1")
+	assert.Equal(t, l.ClusterName, "cluster1", "cluster name")
+	assert.True(t, found, "found reported false for lease %s, expected true", clusterName)
 }
 
 func TestUUIDs(t *testing.T) {
 	rawAnnotations := testutil.GetRawAnnotations(
-		testutil.GetClusterNames(),
+		testutil.GetClusters(),
 		TimeFormat,
 		testutil.DefaultTimeFunc,
 		testutil.DefaultUUIDFunc,
@@ -65,9 +63,9 @@ func TestUUIDs(t *testing.T) {
 }
 
 func TestCreateDeleteLease(t *testing.T) {
-	clusterNames := testutil.GetClusterNames()
+	leaseableClusters := testutil.GetClusters()
 	rawAnnotations := testutil.GetRawAnnotations(
-		clusterNames,
+		leaseableClusters,
 		TimeFormat,
 		testutil.DefaultTimeFunc,
 		testutil.DefaultUUIDFunc,
@@ -88,7 +86,7 @@ func TestCreateDeleteLease(t *testing.T) {
 	assert.False(t, m.CreateLease(newUUID, newLease), "was able to create a new, duplicate lease")
 
 	newUUID2 := uuid.NewUUID()
-	newLease2 := NewLease(clusterNames[0], time.Now().Add(1*time.Hour))
+	newLease2 := NewLease(leaseableClusters[0].Name, time.Now().Add(1*time.Hour))
 	assert.False(t, m.CreateLease(newUUID2, newLease2), "was able to create a new lease with duplicate cluster name")
 
 	assert.True(t, m.DeleteLease(newUUID), "failed to delete existing lease")

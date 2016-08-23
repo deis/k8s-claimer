@@ -8,7 +8,7 @@ import (
 	"github.com/deis/k8s-claimer/testutil"
 )
 
-const (
+var (
 	clusterName = "my test cluster"
 )
 

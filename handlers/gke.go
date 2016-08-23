@@ -105,11 +105,14 @@ type AuthProviderConfig struct {
 // findUnusedGKECluster finds a GKE cluster that's not currently in use according to the
 // annotations in svc. It will also attempt to match the clusterRegex passed in if possible.
 // Returns errUnusedGKEClusterNotFound if none is found
-func findUnusedGKECluster(clusterMap *clusters.Map, leaseMap *leases.Map, clusterRegex string) (*container.Cluster, error) {
+func findUnusedGKECluster(clusterMap *clusters.Map, leaseMap *leases.Map, clusterRegex string, clusterVersion string) (*container.Cluster, error) {
 	if clusterRegex != "" {
 		return findUnusuedGKEClusterByName(clusterMap, leaseMap, clusterRegex)
+	} else if clusterVersion != "" {
+		return findUnusedGKEClusterByVersion(clusterMap, leaseMap, clusterVersion)
+	} else {
+		return findRandomUnusuedGKECluster(clusterMap, leaseMap)
 	}
-	return findRandomUnusuedGKECluster(clusterMap, leaseMap)
 }
 
 // findUnusuedGKEClusterByName attempts to find a unused GKE cluster that matches the regex passed in via the cli.
@@ -120,9 +123,23 @@ func findUnusuedGKEClusterByName(clusterMap *clusters.Map, leaseMap *leases.Map,
 	}
 	for _, clusterName := range clusterMap.Names() {
 		if regex.MatchString(clusterName) {
-			cluster, _ := clusterMap.ClusterByName(clusterName)
-			_, found := leaseMap.LeaseByClusterName(clusterName)
-			if !found {
+			cluster, err := checkLease(clusterMap, leaseMap, clusterName)
+			if err == nil {
+				return cluster, nil
+			}
+		}
+	}
+	return nil, errUnusedGKEClusterNotFound
+}
+
+// findUnusedGKEClusterByVersion attempts to find an unused GKE cluster that matches the version passed in via the CLI.
+func findUnusedGKEClusterByVersion(clusterMap *clusters.Map, leaseMap *leases.Map, clusterVersion string) (*container.Cluster, error) {
+	clusterNames := clusterMap.ClusterNamesByVersion(clusterVersion)
+	if len(clusterNames) > 0 {
+		for tries := 0; tries < 10; tries++ {
+			clusterName := clusterNames[rand.Intn(len(clusterNames))]
+			cluster, err := checkLease(clusterMap, leaseMap, clusterName)
+			if err == nil {
 				return cluster, nil
 			}
 		}
@@ -133,15 +150,24 @@ func findUnusuedGKEClusterByName(clusterMap *clusters.Map, leaseMap *leases.Map,
 // findUnusuedGKECluster attempts to find a random unused GKE cluster
 func findRandomUnusuedGKECluster(clusterMap *clusters.Map, leaseMap *leases.Map) (*container.Cluster, error) {
 	clusterNames := clusterMap.Names()
-	for tries := 0; tries < 10; tries++ {
-		if len(clusterNames) > 0 {
+	if len(clusterNames) > 0 {
+		for tries := 0; tries < 10; tries++ {
 			clusterName := clusterNames[rand.Intn(len(clusterNames))]
-			cluster, _ := clusterMap.ClusterByName(clusterName)
-			_, found := leaseMap.LeaseByClusterName(clusterName)
-			if !found {
+			cluster, err := checkLease(clusterMap, leaseMap, clusterName)
+			if err == nil {
 				return cluster, nil
 			}
 		}
+	}
+	return nil, errUnusedGKEClusterNotFound
+}
+
+// checkLease takes a clusterName and determines if there is an available lease
+func checkLease(clusterMap *clusters.Map, leaseMap *leases.Map, clusterName string) (*container.Cluster, error) {
+	cluster, _ := clusterMap.ClusterByName(clusterName)
+	_, isLeased := leaseMap.LeaseByClusterName(clusterName)
+	if !isLeased {
+		return cluster, nil
 	}
 	return nil, errUnusedGKEClusterNotFound
 }

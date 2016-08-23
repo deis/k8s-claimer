@@ -54,6 +54,11 @@ The Kubeconfig file will be written to kubeconfig-file
 							Value: "",
 							Usage: "A regular expression that will be used to match which cluster you lease",
 						},
+						cli.StringFlag{
+							Name:  "cluster-version",
+							Value: "",
+							Usage: "A version string that will be used to find a cluster to lease",
+						},
 					},
 				},
 				cli.Command{

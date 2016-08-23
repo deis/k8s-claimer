@@ -19,7 +19,8 @@ var (
 
 // findExpiredLease searches in the leases in the svc annotations and returns the cluster name of
 // the first expired lease it finds. If none found, returns an empty string and errNoExpiredLeases
-func findExpiredLease(leaseMap *leases.Map) (*leases.UUIDAndLease, error) {
+func findExpiredLeases(leaseMap *leases.Map) ([]*leases.UUIDAndLease, error) {
+	var leasesUUIDs []*leases.UUIDAndLease
 	now := time.Now()
 	uuids, err := leaseMap.UUIDs()
 	if err != nil {
@@ -32,8 +33,11 @@ func findExpiredLease(leaseMap *leases.Map) (*leases.UUIDAndLease, error) {
 			return nil, err
 		}
 		if now.After(exprTime) {
-			return leases.NewUUIDAndLease(u, lease), nil
+			leasesUUIDs = append(leasesUUIDs, leases.NewUUIDAndLease(u, lease))
 		}
+	}
+	if len(leasesUUIDs) > 0 {
+		return leasesUUIDs, nil
 	}
 	return nil, errNoExpiredLeases
 }
