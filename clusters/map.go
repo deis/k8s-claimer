@@ -10,7 +10,7 @@ type Map struct {
 	nameMap map[string]*container.Cluster
 }
 
-func clustersToMap(c []*container.Cluster) map[string]*container.Cluster {
+func clusterNamesToMap(c []*container.Cluster) map[string]*container.Cluster {
 	ret := make(map[string]*container.Cluster)
 	for _, cluster := range c {
 		ret[cluster.Name] = cluster
@@ -25,7 +25,7 @@ func ParseMapFromGKE(clusterLister gke.ClusterLister, projID, zone string) (*Map
 	if err != nil {
 		return nil, err
 	}
-	return &Map{nameMap: clustersToMap(clustersResp.Clusters)}, nil
+	return &Map{nameMap: clusterNamesToMap(clustersResp.Clusters)}, nil
 }
 
 // ClusterByName returns the cluster of the given cluster name. Returns nil and false if no
@@ -33,6 +33,17 @@ func ParseMapFromGKE(clusterLister gke.ClusterLister, projID, zone string) (*Map
 func (m Map) ClusterByName(name string) (*container.Cluster, bool) {
 	cl, found := m.nameMap[name]
 	return cl, found
+}
+
+// ClusterNamesByVersion returns a slice of all cluster names which match a given cluster version
+func (m Map) ClusterNamesByVersion(matchingVersion string) []string {
+	var ret []string
+	for name, cluster := range m.nameMap {
+		if matchingVersion == cluster.CurrentNodeVersion {
+			ret = append(ret, name)
+		}
+	}
+	return ret
 }
 
 // Names returns all cluster names in the map. The order of the returned slice is undefined

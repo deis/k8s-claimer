@@ -8,7 +8,6 @@ import (
 	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/deis/k8s-claimer/testutil"
-	"github.com/pborman/uuid"
 	"k8s.io/kubernetes/pkg/api"
 )
 
@@ -232,47 +231,32 @@ func newFakeNamespaceListerDeleter(
 	}
 }
 
-func TestFindExpiredLease(t *testing.T) {
-	clusterNames := testutil.GetClusterNames()
-	expClusterIdx := -1
-	uuids := make([]uuid.UUID, len(clusterNames))
+func TestFindExpiredLeases(t *testing.T) {
+	leaseableClusters := testutil.GetClusters()
 	rawAnnotations := testutil.GetRawAnnotations(
-		clusterNames,
+		leaseableClusters,
 		leases.TimeFormat,
 		func(i int) time.Time {
-			if expClusterIdx == -1 {
-				expClusterIdx = i
-				return time.Now().Add(-1 * time.Second)
-			}
-			return time.Now().Add(1 * time.Hour)
+			return time.Now().Add(-1 * time.Second)
 		},
-		func(i int) uuid.UUID {
-			ret := uuid.NewUUID()
-			uuids[i] = ret
-			return ret
-		},
+		testutil.DefaultUUIDFunc,
 	)
-	expClusterName := clusterNames[expClusterIdx]
-	expClusterUUID := uuids[expClusterIdx]
 	leaseMap, err := leases.ParseMapFromAnnotations(rawAnnotations)
 	assert.NoErr(t, err)
-	expLease, found := leaseMap.LeaseByClusterName(expClusterName)
-	assert.True(t, found, "expired lease for cluster %s not found", expClusterName)
-	expired, err := findExpiredLease(leaseMap)
+	expiredLeases, err := findExpiredLeases(leaseMap)
 	assert.NoErr(t, err)
-	assert.Equal(t, expired.Lease.ClusterName, expLease.ClusterName, "cluster name")
-	assert.Equal(t, expired.UUID.String(), expClusterUUID.String(), "lease UUID")
+	assert.NotNil(t, expiredLeases, "there were no expired leases when we expected non-nil")
 
 	rawAnnotations = testutil.GetRawAnnotations(
-		clusterNames,
+		leaseableClusters,
 		leases.TimeFormat,
 		func(int) time.Time { return time.Now().Add(1 * time.Hour) },
 		testutil.DefaultUUIDFunc,
 	)
 	leaseMap, err = leases.ParseMapFromAnnotations(rawAnnotations)
 	assert.NoErr(t, err)
-	expired, err = findExpiredLease(leaseMap)
-	assert.True(t, expired == nil, "non-nil expired lease returned when non were expired")
+	expiredLeases, err = findExpiredLeases(leaseMap)
+	assert.Nil(t, expiredLeases, "non-nil expired leases returned when none were expired")
 	assert.Err(t, errNoExpiredLeases, err)
 }
 

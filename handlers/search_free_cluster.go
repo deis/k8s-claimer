@@ -23,29 +23,25 @@ func (e errExpiredLeaseGKEMissing) Error() string {
 }
 
 // searchForFreeCluster looks for an available GKE cluster to lease.
-// It will try and match clusterRegex if possible
+// It will try and match clusterRegex if possible or clusterVersion
 //
 // Returns errNoAvailableOrExpiredClustersFound if it found no free or expired lease clusters.
 // Returns errExpiredLeaseGKEMissing if it found an expired lease but the cluster associated with
 // that lease doesn't exist in GKE
-func searchForFreeCluster(clusterMap *clusters.Map, leaseMap *leases.Map, clusterRegex string) (*container.Cluster, error) {
-	unusedCluster, unusedClusterErr := findUnusedGKECluster(clusterMap, leaseMap, clusterRegex)
-	uuidAndLease, expiredLeaseErr := findExpiredLease(leaseMap)
-	if unusedClusterErr != nil && expiredLeaseErr != nil {
+func searchForFreeCluster(clusterMap *clusters.Map, leaseMap *leases.Map, clusterRegex string, clusterVersion string) (*container.Cluster, error) {
+	uuidAndLeases, expiredLeaseErr := findExpiredLeases(leaseMap)
+	if expiredLeaseErr == nil {
+		for _, expiredLease := range uuidAndLeases {
+			_, ok := clusterMap.ClusterByName(expiredLease.Lease.ClusterName)
+			if !ok {
+				return nil, errExpiredLeaseGKEMissing{clusterName: expiredLease.Lease.ClusterName}
+			}
+			leaseMap.DeleteLease(expiredLease.UUID)
+		}
+	}
+	cluster, err := findUnusedGKECluster(clusterMap, leaseMap, clusterRegex, clusterVersion)
+	if err != nil {
 		return nil, errNoAvailableOrExpiredClustersFound{}
 	}
-	var availableCluster *container.Cluster
-	if unusedCluster != nil {
-		availableCluster = unusedCluster
-	}
-	if expiredLeaseErr == nil {
-		cl, ok := clusterMap.ClusterByName(uuidAndLease.Lease.ClusterName)
-		if !ok {
-			return nil, errExpiredLeaseGKEMissing{clusterName: uuidAndLease.Lease.ClusterName}
-		}
-		leaseMap.DeleteLease(uuidAndLease.UUID)
-		availableCluster = cl
-	}
-
-	return availableCluster, nil
+	return cluster, nil
 }

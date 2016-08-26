@@ -10,8 +10,9 @@ import (
 // CreateLeaseReq is the encoding/json compatible struct that represents the POST /lease
 // request body
 type CreateLeaseReq struct {
-	MaxTimeSec   int    `json:"max_time"`
-	ClusterRegex string `json:"cluster_regex"`
+	MaxTimeSec     int    `json:"max_time"`
+	ClusterRegex   string `json:"cluster_regex"`
+	ClusterVersion string `json:"cluster_version"`
 }
 
 // MaxTimeDur returns the maximum time specified in c as a time.Duration
@@ -27,10 +28,11 @@ func (c CreateLeaseReq) ExpirationTime(start time.Time) time.Time {
 // CreateLeaseResp is the encoding/json compatible struct that represents the POST /lease
 // response body
 type CreateLeaseResp struct {
-	KubeConfig  string `json:"kubeconfig"`
-	IP          string `json:"ip"`
-	Token       string `json:"uuid"`
-	ClusterName string `json:"cluster_name"`
+	KubeConfig     string `json:"kubeconfig"`
+	IP             string `json:"ip"`
+	Token          string `json:"uuid"`
+	ClusterName    string `json:"cluster_name"`
+	ClusterVersion string `json:"cluster_version"`
 }
 
 // DecodeCreateLeaseResp decodes rdr from its JSON representation into a CreateLeaseResp.

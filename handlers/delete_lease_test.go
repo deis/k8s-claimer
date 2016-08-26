@@ -22,7 +22,7 @@ func getNSFunc(nsListerDeleter k8s.NamespaceListerDeleter, err error) func(*Conf
 
 func TestDeleteLeaseNoToken(t *testing.T) {
 	getterUpdater := newFakeServiceGetterUpdater(nil, nil, nil, nil)
-	clusterLister := newFakeClusterLister(listClusterResp, nil)
+	clusterLister := newFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
 	nsListerDeleter := newFakeNamespaceListerDeleter(&api.NamespaceList{}, nil, nil)
 	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
 	req, err := http.NewRequest("DELETE", "/lease", nil)
@@ -35,7 +35,7 @@ func TestDeleteLeaseNoToken(t *testing.T) {
 
 func TestDeleteLeaseInvalidLeaseToken(t *testing.T) {
 	getterUpdater := newFakeServiceGetterUpdater(nil, nil, nil, nil)
-	clusterLister := newFakeClusterLister(listClusterResp, nil)
+	clusterLister := newFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
 	nsListerDeleter := newFakeNamespaceListerDeleter(&api.NamespaceList{}, nil, nil)
 	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
 	req, err := http.NewRequest("DELETE", "/lease/abcd", nil)
@@ -55,7 +55,7 @@ func TestDeleteLeaseInvalidAnnotations(t *testing.T) {
 		nil,
 		nil,
 	)
-	clusterLister := newFakeClusterLister(listClusterResp, nil)
+	clusterLister := newFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
 	nsListerDeleter := newFakeNamespaceListerDeleter(&api.NamespaceList{}, nil, nil)
 	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
 	req, err := http.NewRequest("DELETE", "/lease/"+uuid.New(), nil)
@@ -73,7 +73,7 @@ func TestDeleteLeaseNoSuchLease(t *testing.T) {
 		nil,
 		nil,
 	)
-	clusterLister := newFakeClusterLister(listClusterResp, nil)
+	clusterLister := newFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
 	nsListerDeleter := newFakeNamespaceListerDeleter(&api.NamespaceList{}, nil, nil)
 	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
 	req, err := http.NewRequest("DELETE", "/lease/"+uuid.New(), nil)
@@ -85,10 +85,10 @@ func TestDeleteLeaseNoSuchLease(t *testing.T) {
 }
 
 func TestDeleteLeaseExists(t *testing.T) {
-	clusterNames := []string{"cluster1", "cluster2"}
-	uuids := make([]uuid.UUID, len(clusterNames))
+	leaseableClusters := testutil.GetClusters()
+	uuids := make([]uuid.UUID, len(leaseableClusters))
 	annos := testutil.GetRawAnnotations(
-		clusterNames,
+		leaseableClusters,
 		leases.TimeFormat,
 		func(i int) time.Time {
 			return time.Now().Add(1 * time.Hour)
@@ -115,7 +115,7 @@ func TestDeleteLeaseExists(t *testing.T) {
 			nsList.Items = append(nsList.Items, api.Namespace{ObjectMeta: api.ObjectMeta{Name: namespace}})
 		}
 
-		listClusterResp := newListClusterResp(clusterNames)
+		listClusterResp := newListClusterResp(testutil.GetClusters())
 		clusterLister := newFakeClusterLister(listClusterResp, nil)
 		nsListerDeleter := newFakeNamespaceListerDeleter(&nsList, nil, nil)
 		hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
@@ -146,10 +146,10 @@ func TestDeleteLeaseExists(t *testing.T) {
 }
 
 func TestDeleteLeaseExistsNoClearNamespaces(t *testing.T) {
-	clusterNames := []string{"cluster1", "cluster2"}
-	uuids := make([]uuid.UUID, len(clusterNames))
+	leaseableClusters := testutil.GetClusters()
+	uuids := make([]uuid.UUID, len(leaseableClusters))
 	annos := testutil.GetRawAnnotations(
-		clusterNames,
+		leaseableClusters,
 		leases.TimeFormat,
 		func(i int) time.Time {
 			return time.Now().Add(1 * time.Hour)
@@ -176,7 +176,7 @@ func TestDeleteLeaseExistsNoClearNamespaces(t *testing.T) {
 			nsList.Items = append(nsList.Items, api.Namespace{ObjectMeta: api.ObjectMeta{Name: namespace}})
 		}
 
-		listClusterResp := newListClusterResp(clusterNames)
+		listClusterResp := newListClusterResp(leaseableClusters)
 		clusterLister := newFakeClusterLister(listClusterResp, nil)
 		nsListerDeleter := newFakeNamespaceListerDeleter(&nsList, nil, nil)
 		hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", false, getNSFunc(nsListerDeleter, nil))

@@ -102,7 +102,7 @@ func CreateLease(
 			return
 		}
 
-		availableCluster, err := searchForFreeCluster(clusterMap, leaseMap, req.ClusterRegex)
+		availableCluster, err := searchForFreeCluster(clusterMap, leaseMap, req.ClusterRegex, req.ClusterVersion)
 		if err != nil {
 			switch e := err.(type) {
 			case errNoAvailableOrExpiredClustersFound:
@@ -137,10 +137,11 @@ func CreateLease(
 		}
 
 		resp := api.CreateLeaseResp{
-			KubeConfig:  kubeConfigStr,
-			IP:          availableCluster.Endpoint,
-			Token:       newToken.String(),
-			ClusterName: availableCluster.Name,
+			KubeConfig:     kubeConfigStr,
+			IP:             availableCluster.Endpoint,
+			Token:          newToken.String(),
+			ClusterName:    availableCluster.Name,
+			ClusterVersion: availableCluster.CurrentNodeVersion,
 		}
 
 		leaseMap.CreateLease(newToken, leases.NewLease(availableCluster.Name, req.ExpirationTime(time.Now())))
