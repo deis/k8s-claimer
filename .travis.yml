@@ -26,5 +26,8 @@ deploy:
     branch: master
   acl: public-read
 
+after_deploy:
+- _scripts/deploy.sh
+
 after_success:
   - bash <(curl -s https://codecov.io/bash)
