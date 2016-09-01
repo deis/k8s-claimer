@@ -13,5 +13,5 @@ DEIS_REGISTRY=quay.io/ make -C .. docker-build docker-push
 
 # download deis CLI & deploy to deis
 curl -sSL http://deis.io/deis-cli/install-v2.sh | bash
-./deis login --username=$DEIS_USERNAME --password=$DEIS_PASSWORD deis.k8s-claimer-e2e.deis.com
-DEIS_BINARY_NAME=./_scripts/deis DEIS_APP_NAME=k8s-claimer-e2e make -C .. deploy-to-deis
+./deis login --username=$DEIS_USERNAME --password=$DEIS_PASSWORD deis.champagne.deis.com
+DEIS_BINARY_NAME=./_scripts/deis DEIS_APP_NAME=k8s-claimer make -C .. deploy-to-deis
