@@ -45,10 +45,5 @@ func TestSearchForClusterNoLeaseFound(t *testing.T) {
 	assert.NoErr(t, err)
 	cluster, err := searchForFreeCluster(clusterMap, leaseMap, "", "")
 	assert.Nil(t, cluster, "cluster")
-	switch tErr := err.(type) {
-	case errExpiredLeaseGKEMissing:
-		assert.Equal(t, tErr.clusterName, clusterName, "cluster name")
-	default:
-		t.Fatalf("returned error was not a errExpiredLeaseGKEMissing (it was a %s)", reflect.TypeOf(tErr))
-	}
+	assert.Err(t, errNoAvailableOrExpiredClustersFound{}, err)
 }
