@@ -32,10 +32,6 @@ func searchForFreeCluster(clusterMap *clusters.Map, leaseMap *leases.Map, cluste
 	uuidAndLeases, expiredLeaseErr := findExpiredLeases(leaseMap)
 	if expiredLeaseErr == nil {
 		for _, expiredLease := range uuidAndLeases {
-			_, ok := clusterMap.ClusterByName(expiredLease.Lease.ClusterName)
-			if !ok {
-				return nil, errExpiredLeaseGKEMissing{clusterName: expiredLease.Lease.ClusterName}
-			}
 			leaseMap.DeleteLease(expiredLease.UUID)
 		}
 	}
