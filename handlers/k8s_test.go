@@ -261,14 +261,14 @@ func TestFindExpiredLeases(t *testing.T) {
 }
 
 func TestCreateKubeClientFromConfig(t *testing.T) {
-	conf := &Config{
+	conf := &k8s.KubeConfig{
 		Kind:        "testKind",
 		APIVersion:  "v1",
-		Preferences: Preferences{Colors: true},
-		Clusters: []NamedCluster{
-			NamedCluster{
+		Preferences: k8s.Preferences{Colors: true},
+		Clusters: []k8s.NamedCluster{
+			k8s.NamedCluster{
 				Name: "test1",
-				Cluster: Cluster{
+				Cluster: k8s.Cluster{
 					Server:                   "test.server.com",
 					APIVersion:               "v1",
 					InsecureSkipTLSVerify:    false,
@@ -276,10 +276,10 @@ func TestCreateKubeClientFromConfig(t *testing.T) {
 				},
 			},
 		},
-		AuthInfos: []NamedAuthInfo{
-			NamedAuthInfo{
+		AuthInfos: []k8s.NamedAuthInfo{
+			k8s.NamedAuthInfo{
 				Name: "test1",
-				AuthInfo: AuthInfo{
+				AuthInfo: k8s.AuthInfo{
 					ClientCertificateData: pubKey,
 					ClientKeyData:         privKey,
 					Impersonate:           "impersonate1",

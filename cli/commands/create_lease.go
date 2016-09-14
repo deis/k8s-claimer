@@ -2,17 +2,14 @@ package commands
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 
 	"github.com/codegangsta/cli"
-	"github.com/deis/k8s-claimer/api"
-	"github.com/deis/k8s-claimer/htp"
+	"github.com/deis/k8s-claimer/client"
 )
 
 const (
@@ -27,12 +24,10 @@ func CreateLease(c *cli.Context) error {
 	authToken := os.Getenv("AUTH_TOKEN")
 	if authToken == "" {
 		log.Fatalf("An authorization token is required in the form of an env var AUTH_TOKEN")
-		return errMissingAuthToken
 	}
 	server := c.GlobalString("server")
 	if server == "" {
 		log.Fatalf("Server missing")
-		return errMissingServer
 	}
 	durationSec := c.Int("duration")
 	if durationSec <= 0 {
@@ -44,52 +39,29 @@ func CreateLease(c *cli.Context) error {
 	kcfgFile := c.String("kubeconfig-file")
 	if len(kcfgFile) < 1 {
 		log.Fatalf("Missing kubeconfig-file")
-		return errMissingKubeConfigFile
 	}
 
 	fd, err := os.Create(kcfgFile)
 	if err != nil {
 		log.Fatalf("Error opening %s (%s)", kcfgFile, err)
-		return err
 	}
 	defer fd.Close()
 
-	endpt := newEndpoint(htp.Post, server, "lease")
-	reqBuf := new(bytes.Buffer)
-	req := api.CreateLeaseReq{MaxTimeSec: durationSec, ClusterRegex: clusterRegex, ClusterVersion: clusterVersion}
-	if encErr := json.NewEncoder(reqBuf).Encode(req); encErr != nil {
-		log.Fatalf("Error encoding request body (%s)", err)
-		return err
-	}
-	res, err := endpt.executeReq(getHTTPClient(), reqBuf, authToken)
+	resp, err := client.CreateLease(server, authToken, clusterVersion, clusterRegex, durationSec)
 	if err != nil {
-		log.Fatalf("Error executing %s (%s)", endpt, err)
-		return err
-	}
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		log.Fatalf("Error executing %s (status code %d)", endpt, res.StatusCode)
-		return errInvalidStatusCode{endpoint: endpt.String(), code: res.StatusCode}
+		log.Fatalf("Error creating lease (%s)", err)
 	}
 
-	decodedRes, err := api.DecodeCreateLeaseResp(res.Body)
-	if err != nil {
-		log.Fatalf("Error decoding response (%s)", err)
-		return err
-	}
-
-	kcfg, err := decodedRes.DecodeKubeConfig()
+	kcfg, err := resp.KubeConfigBytes()
 	if err != nil {
 		log.Fatalf("Error decoding kubeconfig (%s)", err)
-		return err
 	}
-	fmt.Println(exportVar(envPrefix, ipEnvVarName, decodedRes.IP))
-	fmt.Println(exportVar(envPrefix, tokenEnvVarName, decodedRes.Token))
-	fmt.Println(exportVar(envPrefix, clusterNameEnvVarName, decodedRes.ClusterName))
+	fmt.Println(exportVar(envPrefix, ipEnvVarName, resp.IP))
+	fmt.Println(exportVar(envPrefix, tokenEnvVarName, resp.Token))
+	fmt.Println(exportVar(envPrefix, clusterNameEnvVarName, resp.ClusterName))
 
 	if _, err := io.Copy(fd, bytes.NewBuffer(kcfg)); err != nil {
 		log.Fatalf("Error writing new Kubeconfig file to %s (%s)", kcfgFile, err)
-		return err
 	}
 	return nil
 }

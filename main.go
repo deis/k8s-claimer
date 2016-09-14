@@ -22,8 +22,8 @@ var (
 	errNilConfig = errors.New("nil config")
 )
 
-func kubeNamespacesFromConfig() func(*handlers.Config) (k8s.NamespaceListerDeleter, error) {
-	return func(conf *handlers.Config) (k8s.NamespaceListerDeleter, error) {
+func kubeNamespacesFromConfig() func(*k8s.KubeConfig) (k8s.NamespaceListerDeleter, error) {
+	return func(conf *k8s.KubeConfig) (k8s.NamespaceListerDeleter, error) {
 		if conf == nil {
 			return nil, errNilConfig
 		}

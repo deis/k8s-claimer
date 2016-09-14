@@ -140,7 +140,7 @@ func CreateLease(
 		}
 
 		resp := api.CreateLeaseResp{
-			KubeConfig:     kubeConfigStr,
+			KubeConfigStr:  kubeConfigStr,
 			IP:             availableCluster.Endpoint,
 			Token:          newToken.String(),
 			ClusterName:    availableCluster.Name,

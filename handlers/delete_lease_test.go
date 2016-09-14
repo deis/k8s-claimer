@@ -14,8 +14,8 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 )
 
-func getNSFunc(nsListerDeleter k8s.NamespaceListerDeleter, err error) func(*Config) (k8s.NamespaceListerDeleter, error) {
-	return func(*Config) (k8s.NamespaceListerDeleter, error) {
+func getNSFunc(nsListerDeleter k8s.NamespaceListerDeleter, err error) func(*k8s.KubeConfig) (k8s.NamespaceListerDeleter, error) {
+	return func(*k8s.KubeConfig) (k8s.NamespaceListerDeleter, error) {
 		return nsListerDeleter, err
 	}
 }
