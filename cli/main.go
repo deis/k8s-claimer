@@ -7,9 +7,13 @@ import (
 	"github.com/deis/k8s-claimer/cli/commands"
 )
 
+// This value is overwritten by the linker during build.
+var version = "dev"
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "k8s-claimer"
+	app.Version = version
 	app.Usage = "This CLI can be used against a k8s-claimer server to acquire and release leases"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{

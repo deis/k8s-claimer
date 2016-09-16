@@ -2,7 +2,6 @@ SHORT_NAME ?= k8s-claimer
 
 include versioning.mk
 
-VERSION ?= git-$(shell git rev-parse --short HEAD)
 LDFLAGS := -ldflags "-s -X main.version=${VERSION}"
 REPO_PATH := github.com/deis/${SHORT_NAME}
 DEV_ENV_IMAGE := quay.io/deis/go-dev:0.17.0
@@ -43,6 +42,6 @@ else
 endif
 
 build-cli:
-	go build -o k8s-claimer-cli ./cli
+	go build ${LDFLAGS} -o k8s-claimer-cli ./cli
 
 dist: build-cli-cross
