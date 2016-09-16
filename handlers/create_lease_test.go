@@ -14,6 +14,7 @@ import (
 	"github.com/deis/k8s-claimer/testutil"
 	"github.com/pborman/uuid"
 	container "google.golang.org/api/container/v1"
+	"gopkg.in/yaml.v2"
 	k8sapi "k8s.io/kubernetes/pkg/api"
 )
 
@@ -76,9 +77,11 @@ func TestCreateLeaseValidResp(t *testing.T) {
 	expectedKubeCfg, err := createKubeConfigFromCluster(expectedCluster)
 	assert.NoErr(t, err)
 
-	expectedMarshalledKubeCfg, err := marshalAndEncodeKubeConfig(expectedKubeCfg)
+	expectedMarshalledKubeCfg, err := yaml.Marshal(expectedKubeCfg)
 	assert.NoErr(t, err)
-	assert.Equal(t, leaseResp.KubeConfig, expectedMarshalledKubeCfg, "returned kubeconfig")
+	marshalledBytes, err := leaseResp.KubeConfigBytes()
+	assert.NoErr(t, err)
+	assert.Equal(t, marshalledBytes, expectedMarshalledKubeCfg, "returned kubeconfig")
 	assert.Equal(t, leaseResp.IP, cluster.Endpoint, "returned IP address")
 
 	parsedUUID := uuid.Parse(leaseResp.Token)

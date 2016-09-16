@@ -9,6 +9,7 @@ import (
 	"github.com/arschles/assert"
 	"github.com/deis/k8s-claimer/clusters"
 	"github.com/deis/k8s-claimer/gke"
+	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/deis/k8s-claimer/testutil"
 	container "google.golang.org/api/container/v1"
@@ -121,52 +122,52 @@ func TestMarshalAndEncodeKubeConfig(t *testing.T) {
 	clusterNames := []string{"cluster1", "cluster2", "cluster3"}
 	authInfoNames := []string{"authInfo1", "authInfo2", "authInfo3"}
 
-	var contexts []NamedContext
+	var contexts []k8s.NamedContext
 	for i, contextName := range contextNames {
-		context := Context{
+		context := k8s.Context{
 			Cluster:   clusterNames[i],
 			AuthInfo:  authInfoNames[i],
 			Namespace: namespace,
 		}
-		namedContext := NamedContext{
+		namedContext := k8s.NamedContext{
 			Name:    contextName,
 			Context: context,
 		}
 		contexts = append(contexts, namedContext)
 	}
 
-	var clusters []NamedCluster
+	var clusters []k8s.NamedCluster
 	for _, clusterName := range clusterNames {
-		cluster := Cluster{
+		cluster := k8s.Cluster{
 			Server:                   clusterName + "/server",
 			APIVersion:               kubeconfigAPIVersion,
 			InsecureSkipTLSVerify:    false,
 			CertificateAuthorityData: clusterName + "_cert_authority",
 		}
-		namedCluster := NamedCluster{
+		namedCluster := k8s.NamedCluster{
 			Name:    clusterName,
 			Cluster: cluster,
 		}
 		clusters = append(clusters, namedCluster)
 	}
 
-	var authInfos []NamedAuthInfo
+	var authInfos []k8s.NamedAuthInfo
 	for _, authInfoName := range authInfoNames {
-		authInfo := AuthInfo{
+		authInfo := k8s.AuthInfo{
 			ClientCertificateData: authInfoName + "_cert_data",
 			ClientKeyData:         authInfoName + "_key_data",
 			Username:              authInfoName + "_username",
 			Password:              authInfoName + "_password",
 			Token:                 authInfoName + "_bearer_token",
 		}
-		namedAuthInfo := NamedAuthInfo{
+		namedAuthInfo := k8s.NamedAuthInfo{
 			Name:     authInfoName,
 			AuthInfo: authInfo,
 		}
 		authInfos = append(authInfos, namedAuthInfo)
 	}
 
-	cfg := &Config{
+	cfg := &k8s.KubeConfig{
 		CurrentContext: "ctx1",
 		Clusters:       clusters,
 		Contexts:       contexts,
@@ -177,7 +178,7 @@ func TestMarshalAndEncodeKubeConfig(t *testing.T) {
 	assert.NoErr(t, err)
 	decodedBytes, err := base64.StdEncoding.DecodeString(yamlString)
 	assert.NoErr(t, err)
-	decodedCfg := new(Config)
+	decodedCfg := new(k8s.KubeConfig)
 	assert.NoErr(t, yaml.Unmarshal(decodedBytes, decodedCfg))
 	assert.Equal(t, decodedCfg.APIVersion, cfg.APIVersion, "API version")
 	assert.Equal(t, decodedCfg.AuthInfos[0].AuthInfo.ClientCertificateData, cfg.AuthInfos[0].AuthInfo.ClientCertificateData,

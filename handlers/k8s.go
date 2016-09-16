@@ -56,7 +56,7 @@ func saveAnnotations(services k8s.ServiceUpdater, svc *api.Service, leaseMap *le
 
 // CreateKubeClientFromConfig creates a new Kubernetes client from the given configuration.
 // returns nil and the appropriate error if the client couldn't be created for any reason
-func CreateKubeClientFromConfig(conf *Config) (*kcl.Client, error) {
+func CreateKubeClientFromConfig(conf *k8s.KubeConfig) (*kcl.Client, error) {
 	rcConf := new(restclient.Config)
 	if len(conf.Clusters) < 1 {
 		return nil, errNoClustersInConfig

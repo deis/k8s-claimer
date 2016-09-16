@@ -1,15 +1,7 @@
-package commands
+package client
 
 import (
-	"errors"
 	"fmt"
-)
-
-var (
-	errMissingAuthToken      = errors.New("missing AUTH_TOKEN")
-	errMissingLeaseToken     = errors.New("missing lease token")
-	errMissingServer         = errors.New("missing IP")
-	errMissingKubeConfigFile = errors.New("missing kubeconfig file")
 )
 
 type errInvalidStatusCode struct {
@@ -28,4 +20,20 @@ type errHTTPRequest struct {
 
 func (e errHTTPRequest) Error() string {
 	return fmt.Sprintf("error executing HTTP request on %s (%s)", e.endpoint, e.err)
+}
+
+type errEncoding struct {
+	err error
+}
+
+func (e errEncoding) Error() string {
+	return fmt.Sprintf("Error encoding request body (%s)", e.err)
+}
+
+type errDecoding struct {
+	err error
+}
+
+func (e errDecoding) Error() string {
+	return fmt.Sprintf("Error decoding response body (%s)", e.err)
 }

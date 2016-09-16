@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"io"
 	"time"
+
+	"github.com/deis/k8s-claimer/k8s"
 )
 
 // CreateLeaseReq is the encoding/json compatible struct that represents the POST /lease
@@ -28,7 +30,7 @@ func (c CreateLeaseReq) ExpirationTime(start time.Time) time.Time {
 // CreateLeaseResp is the encoding/json compatible struct that represents the POST /lease
 // response body
 type CreateLeaseResp struct {
-	KubeConfig     string `json:"kubeconfig"`
+	KubeConfigStr  string `json:"kubeconfig"`
 	IP             string `json:"ip"`
 	Token          string `json:"uuid"`
 	ClusterName    string `json:"cluster_name"`
@@ -45,8 +47,25 @@ func DecodeCreateLeaseResp(rdr io.Reader) (*CreateLeaseResp, error) {
 	return ret, nil
 }
 
-// DecodeKubeConfig decodes c.KubeConfig by the RFC 4648 standard.
+// KubeConfigBytes decodes c.KubeConfig by the RFC 4648 standard.
 // See http://tools.ietf.org/html/rfc4648 for more information
-func (c CreateLeaseResp) DecodeKubeConfig() ([]byte, error) {
-	return base64.StdEncoding.DecodeString(c.KubeConfig)
+func (c CreateLeaseResp) KubeConfigBytes() ([]byte, error) {
+	kubeConfigBytes, err := base64.StdEncoding.DecodeString(c.KubeConfigStr)
+	if err != nil {
+		return nil, err
+	}
+	return kubeConfigBytes, nil
+}
+
+// KubeConfig returns decoded and unmarshalled Kubernetes client configuration
+func (c CreateLeaseResp) KubeConfig() (*k8s.KubeConfig, error) {
+	configBytes, err := c.KubeConfigBytes()
+	if err != nil {
+		return nil, err
+	}
+	kubeConfig := &k8s.KubeConfig{}
+	if err := json.Unmarshal(configBytes, kubeConfig); err != nil {
+		return nil, err
+	}
+	return kubeConfig, nil
 }

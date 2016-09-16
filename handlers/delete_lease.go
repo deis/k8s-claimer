@@ -26,7 +26,7 @@ func DeleteLease(
 	projID,
 	zone string,
 	clearNamespaces bool,
-	nsFunc func(*Config) (k8s.NamespaceListerDeleter, error),
+	nsFunc func(*k8s.KubeConfig) (k8s.NamespaceListerDeleter, error),
 ) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pathElts := htp.SplitPath(r)
