@@ -53,6 +53,83 @@ package. This is a required field. You can get a JWT file from the Google Cloud 
 - `SERVICE_NAME` - The service on which to store lease data. Defaults to `k8s-claimer`
 - `AUTH_TOKEN` - The authentication token that clients must use to acquire and release leases
 
+# CLI
+
+A command line interface is provided which talks to the REST API server. You can download the binaries
+using the links above, or build it yourself by executing `make bootstrap build-cli`.
+
+See `k8s-claimer --help` for full CLI documentation.
+
+```shell
+$ k8s-claimer --help
+NAME:
+   k8s-claimer - This CLI can be used against a k8s-claimer server to acquire and release leases
+
+USAGE:
+   k8s-claimer [global options] command [command options] [arguments...]
+
+COMMANDS:
+     lease
+     help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --server value  The k8s-claimer server to talk to
+   --help, -h      show help
+   --version, -v   print the version
+```
+
+## Create a Lease
+
+```shell
+$ k8s-claimer lease create --help
+NAME:
+   k8s-claimer lease create - Creates a new lease and returns 'export' statements to set the lease values as environment variables. Set the 'env-prefix' flag to prefix the environment variable names. If you pass that flag, a '_' character will separate the prefix with the rest of the environment variable name. Below are the basic environment variable names:
+
+- IP - the IP address of the Kubernetes master server
+- TOKEN - contains the lease token. Use this when you run 'k8s-claimer lease delete'
+- CLUSTER_NAME - contains the name of the cluster. For informational purposes only
+
+The Kubeconfig file will be written to kubeconfig-file
+
+
+USAGE:
+   k8s-claimer lease create [command options] [arguments...]
+
+OPTIONS:
+   --duration value         The duration of the lease in seconds (default: 10)
+   --env-prefix value       The prefix for all environment variables that this command sets
+   --kubeconfig-file value  The location of the resulting Kubeconfig file (default: "./kubeconfig.yaml")
+   --cluster-regex value    A regular expression that will be used to match which cluster you lease
+   --cluster-version value  A version string that will be used to find a cluster to lease
+```
+
+Example
+```shell
+$ k8s-claimer --server <server-name> lease create
+export IP="1.2.3.4"
+export TOKEN="<token>"
+export CLUSTER_NAME="cattier"
+```
+
+## Delete a Lease
+
+```shell
+$ k8s-claimer lease delete --help
+NAME:
+   k8s-claimer lease delete - Releases a currently held lease. Pass the lease token as the first and only parameter to this command. For example:
+
+k8s-claimer lease delete $TOKEN
+
+
+USAGE:
+   k8s-claimer lease delete [arguments...]
+```
+
+Example
+```shell
+$ k8s-claimer --server <server-name> lease delete <token>
+Deleted lease <token>
+```
 
 # API
 
