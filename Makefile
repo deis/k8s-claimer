@@ -17,6 +17,9 @@ BINARY_NAME := k8s-claimer
 bootstrap:
 	${DEV_ENV_CMD} glide install
 
+glideup:
+	${DEV_ENV_CMD} glide up
+
 build:
 	${DEV_ENV_PREFIX} -e CGO_ENABLED=0 ${DEV_ENV_IMAGE} go build -a -installsuffix cgo ${LDFLAGS} -o rootfs/bin/boot
 
