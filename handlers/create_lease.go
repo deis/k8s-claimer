@@ -13,7 +13,7 @@ import (
 	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/pborman/uuid"
-	k8sapi "k8s.io/kubernetes/pkg/api"
+	"k8s.io/client-go/1.4/pkg/api/v1"
 )
 
 func getSvcsAndClusters(
@@ -22,12 +22,12 @@ func getSvcsAndClusters(
 	gCloudProjID,
 	gCloudZone,
 	k8sServiceName string,
-) (*clusters.Map, *k8sapi.Service, error) {
+) (*clusters.Map, *v1.Service, error) {
 
 	errCh := make(chan error)
 	doneCh := make(chan struct{})
 	clusterMapCh := make(chan *clusters.Map)
-	apiServiceCh := make(chan *k8sapi.Service)
+	apiServiceCh := make(chan *v1.Service)
 	defer close(doneCh)
 	go func() {
 		svc, err := services.Get(k8sServiceName)
@@ -59,7 +59,7 @@ func getSvcsAndClusters(
 	}()
 
 	var clusterMapRet *clusters.Map
-	var apiServiceRet *k8sapi.Service
+	var apiServiceRet *v1.Service
 	for {
 		select {
 		case err := <-errCh:

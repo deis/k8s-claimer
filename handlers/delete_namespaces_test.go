@@ -5,19 +5,19 @@ import (
 
 	"github.com/arschles/assert"
 	"github.com/deis/k8s-claimer/k8s"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/client-go/1.4/pkg/api/v1"
 )
 
 func getNSListerDeleter(listedNamespaces []string) *k8s.FakeNamespaceListerDeleter {
 	ret := &k8s.FakeNamespaceListerDeleter{
 		FakeNamespaceLister: &k8s.FakeNamespaceLister{
-			NsList: &api.NamespaceList{},
+			NsList: &v1.NamespaceList{},
 		},
 		FakeNamespaceDeleter: &k8s.FakeNamespaceDeleter{},
 	}
 	for _, listedNamespace := range listedNamespaces {
-		ret.FakeNamespaceLister.NsList.Items = append(ret.FakeNamespaceLister.NsList.Items, api.Namespace{
-			ObjectMeta: api.ObjectMeta{Name: listedNamespace},
+		ret.FakeNamespaceLister.NsList.Items = append(ret.FakeNamespaceLister.NsList.Items, v1.Namespace{
+			ObjectMeta: v1.ObjectMeta{Name: listedNamespace},
 		})
 	}
 	return ret

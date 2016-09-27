@@ -1,7 +1,7 @@
 package k8s
 
 import (
-	"k8s.io/kubernetes/pkg/runtime"
+	"k8s.io/client-go/1.4/pkg/runtime"
 )
 
 // KubeConfig holds the information needed to connect to remote kubernetes clusters as a given user

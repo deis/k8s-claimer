@@ -8,7 +8,7 @@ import (
 	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/deis/k8s-claimer/testutil"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/client-go/1.4/pkg/api/v1"
 )
 
 const (
@@ -192,18 +192,18 @@ v3TGd3xXD9yQIjmugNgxNiwAZzhJs/ZJy++fPSJ1XQxbd9qPghgGoe/ff6G7
 -----END RSA PRIVATE KEY-----`
 )
 
-func newFakeServiceGetter(svc *api.Service, err error) *k8s.FakeServiceGetter {
+func newFakeServiceGetter(svc *v1.Service, err error) *k8s.FakeServiceGetter {
 	return &k8s.FakeServiceGetter{Svc: svc, Err: err}
 }
 
-func newFakeServiceUpdater(retSvc *api.Service, err error) *k8s.FakeServiceUpdater {
+func newFakeServiceUpdater(retSvc *v1.Service, err error) *k8s.FakeServiceUpdater {
 	return &k8s.FakeServiceUpdater{RetSvc: retSvc, Err: err}
 }
 
 func newFakeServiceGetterUpdater(
-	getSvc *api.Service,
+	getSvc *v1.Service,
 	getErr error,
-	updateSvc *api.Service,
+	updateSvc *v1.Service,
 	updateErr error,
 ) *k8s.FakeServiceGetterUpdater {
 	return &k8s.FakeServiceGetterUpdater{
@@ -212,7 +212,7 @@ func newFakeServiceGetterUpdater(
 	}
 }
 
-func newFakeNamespaceLister(nsList *api.NamespaceList, err error) *k8s.FakeNamespaceLister {
+func newFakeNamespaceLister(nsList *v1.NamespaceList, err error) *k8s.FakeNamespaceLister {
 	return &k8s.FakeNamespaceLister{NsList: nsList, Err: err}
 }
 
@@ -221,7 +221,7 @@ func newFakeNamespaceDeleter(err error) *k8s.FakeNamespaceDeleter {
 }
 
 func newFakeNamespaceListerDeleter(
-	listNs *api.NamespaceList,
+	listNs *v1.NamespaceList,
 	listErr error,
 	deleteErr error,
 ) *k8s.FakeNamespaceListerDeleter {

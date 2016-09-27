@@ -10,7 +10,8 @@ import (
 	"github.com/deis/k8s-claimer/handlers"
 	"github.com/deis/k8s-claimer/htp"
 	"github.com/deis/k8s-claimer/k8s"
-	kcl "k8s.io/kubernetes/pkg/client/unversioned"
+	"k8s.io/client-go/1.4/kubernetes"
+	"k8s.io/client-go/1.4/rest"
 )
 
 const (
@@ -64,7 +65,11 @@ func main() {
 		log.Fatalf("Error creating GKE client (%s)", err)
 	}
 
-	k8sClient, err := kcl.NewInCluster()
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		log.Fatalf("Error creating Kubernetes client (%s)", err)
+	}
+	k8sClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Fatalf("Error creating Kubernetes client (%s)", err)
 	}

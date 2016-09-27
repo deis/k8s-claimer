@@ -15,7 +15,7 @@ import (
 	"github.com/pborman/uuid"
 	container "google.golang.org/api/container/v1"
 	"gopkg.in/yaml.v2"
-	k8sapi "k8s.io/kubernetes/pkg/api"
+	"k8s.io/client-go/1.4/pkg/api/v1"
 )
 
 var (
@@ -58,8 +58,8 @@ func TestCreateLeaseInvalidReq(t *testing.T) {
 func TestCreateLeaseValidResp(t *testing.T) {
 	cluster := testutil.GetClusters()[0]
 	clusterLister := newFakeClusterLister(newListClusterResp([]*container.Cluster{cluster}), nil)
-	services := newFakeServiceGetterUpdater(&k8sapi.Service{
-		ObjectMeta: k8sapi.ObjectMeta{Name: "service1"},
+	services := newFakeServiceGetterUpdater(&v1.Service{
+		ObjectMeta: v1.ObjectMeta{Name: "service1"},
 	}, nil, nil, nil)
 	hdl := CreateLease(clusterLister, services, "", "", "")
 	reqBody := `{"max_time":30}`
