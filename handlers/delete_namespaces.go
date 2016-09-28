@@ -4,8 +4,7 @@ import (
 	"fmt"
 
 	"github.com/deis/k8s-claimer/k8s"
-	k8sapi "k8s.io/kubernetes/pkg/api"
-	labels "k8s.io/kubernetes/pkg/labels"
+	"k8s.io/client-go/1.4/pkg/api"
 )
 
 type errListNamespaces struct {
@@ -27,7 +26,7 @@ func (e errDeleteNamespaces) Error() string {
 // deleteNamespaces deletes all namespaces listed under all labels in namespaces.List, except for
 // the namespaces in skip or skipDeleteNamespaces
 func deleteNamespaces(namespaces k8s.NamespaceListerDeleter, skip map[string]struct{}) error {
-	namespacesList, err := namespaces.List(k8sapi.ListOptions{LabelSelector: labels.Everything()})
+	namespacesList, err := namespaces.List(api.ListOptions{})
 	if err != nil {
 		return errListNamespaces{origErr: err}
 	}
@@ -37,7 +36,7 @@ func deleteNamespaces(namespaces k8s.NamespaceListerDeleter, skip map[string]str
 		_, inSkip := skip[namespace.Name]
 		_, isDefault := skipDeleteNamespaces[namespace.Name]
 		if !isDefault && !inSkip {
-			if err := namespaces.Delete(namespace.Name); err != nil {
+			if err := namespaces.Delete(namespace.Name, &api.DeleteOptions{}); err != nil {
 				errs = append(errs, err)
 			}
 		}

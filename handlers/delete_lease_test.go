@@ -11,7 +11,7 @@ import (
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/deis/k8s-claimer/testutil"
 	"github.com/pborman/uuid"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/client-go/1.4/pkg/api/v1"
 )
 
 func getNSFunc(nsListerDeleter k8s.NamespaceListerDeleter, err error) func(*k8s.KubeConfig) (k8s.NamespaceListerDeleter, error) {
@@ -23,7 +23,7 @@ func getNSFunc(nsListerDeleter k8s.NamespaceListerDeleter, err error) func(*k8s.
 func TestDeleteLeaseNoToken(t *testing.T) {
 	getterUpdater := newFakeServiceGetterUpdater(nil, nil, nil, nil)
 	clusterLister := newFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
-	nsListerDeleter := newFakeNamespaceListerDeleter(&api.NamespaceList{}, nil, nil)
+	nsListerDeleter := newFakeNamespaceListerDeleter(&v1.NamespaceList{}, nil, nil)
 	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
 	req, err := http.NewRequest("DELETE", "/lease", nil)
 	req.Header.Set("Authorization", "some awesome token")
@@ -36,7 +36,7 @@ func TestDeleteLeaseNoToken(t *testing.T) {
 func TestDeleteLeaseInvalidLeaseToken(t *testing.T) {
 	getterUpdater := newFakeServiceGetterUpdater(nil, nil, nil, nil)
 	clusterLister := newFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
-	nsListerDeleter := newFakeNamespaceListerDeleter(&api.NamespaceList{}, nil, nil)
+	nsListerDeleter := newFakeNamespaceListerDeleter(&v1.NamespaceList{}, nil, nil)
 	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
 	req, err := http.NewRequest("DELETE", "/lease/abcd", nil)
 	req.Header.Set("Authorization", "some awesome token")
@@ -50,13 +50,13 @@ func TestDeleteLeaseInvalidAnnotations(t *testing.T) {
 	// Issue a DELETE with a lease token that doesn't point to a valid lease.
 	// Annotations have invalid data in them, which the lease parser should just ignore.
 	getterUpdater := newFakeServiceGetterUpdater(
-		&api.Service{ObjectMeta: api.ObjectMeta{Annotations: map[string]string{"a": "b"}}},
+		&v1.Service{ObjectMeta: v1.ObjectMeta{Annotations: map[string]string{"a": "b"}}},
 		nil,
 		nil,
 		nil,
 	)
 	clusterLister := newFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
-	nsListerDeleter := newFakeNamespaceListerDeleter(&api.NamespaceList{}, nil, nil)
+	nsListerDeleter := newFakeNamespaceListerDeleter(&v1.NamespaceList{}, nil, nil)
 	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
 	req, err := http.NewRequest("DELETE", "/lease/"+uuid.New(), nil)
 	req.Header.Set("Authorization", "some awesome token")
@@ -68,13 +68,13 @@ func TestDeleteLeaseInvalidAnnotations(t *testing.T) {
 
 func TestDeleteLeaseNoSuchLease(t *testing.T) {
 	getterUpdater := newFakeServiceGetterUpdater(
-		&api.Service{ObjectMeta: api.ObjectMeta{Annotations: map[string]string{}}},
+		&v1.Service{ObjectMeta: v1.ObjectMeta{Annotations: map[string]string{}}},
 		nil,
 		nil,
 		nil,
 	)
 	clusterLister := newFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
-	nsListerDeleter := newFakeNamespaceListerDeleter(&api.NamespaceList{}, nil, nil)
+	nsListerDeleter := newFakeNamespaceListerDeleter(&v1.NamespaceList{}, nil, nil)
 	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
 	req, err := http.NewRequest("DELETE", "/lease/"+uuid.New(), nil)
 	req.Header.Set("Authorization", "some awesome token")
@@ -101,7 +101,7 @@ func TestDeleteLeaseExists(t *testing.T) {
 	)
 	for i, u := range uuids {
 		getterUpdater := newFakeServiceGetterUpdater(
-			&api.Service{ObjectMeta: api.ObjectMeta{Annotations: annos}},
+			&v1.Service{ObjectMeta: v1.ObjectMeta{Annotations: annos}},
 			nil,
 			nil,
 			nil,
@@ -110,9 +110,9 @@ func TestDeleteLeaseExists(t *testing.T) {
 
 		defaultNamespaces := []string{"default", "kube-system"}
 		namespaces := append(defaultNamespaces, "ns1", "ns2")
-		nsList := api.NamespaceList{}
+		nsList := v1.NamespaceList{}
 		for _, namespace := range namespaces {
-			nsList.Items = append(nsList.Items, api.Namespace{ObjectMeta: api.ObjectMeta{Name: namespace}})
+			nsList.Items = append(nsList.Items, v1.Namespace{ObjectMeta: v1.ObjectMeta{Name: namespace}})
 		}
 
 		listClusterResp := newListClusterResp(testutil.GetClusters())
@@ -162,7 +162,7 @@ func TestDeleteLeaseExistsNoClearNamespaces(t *testing.T) {
 	)
 	for i, u := range uuids {
 		getterUpdater := newFakeServiceGetterUpdater(
-			&api.Service{ObjectMeta: api.ObjectMeta{Annotations: annos}},
+			&v1.Service{ObjectMeta: v1.ObjectMeta{Annotations: annos}},
 			nil,
 			nil,
 			nil,
@@ -171,9 +171,9 @@ func TestDeleteLeaseExistsNoClearNamespaces(t *testing.T) {
 
 		defaultNamespaces := []string{"default", "kube-system"}
 		namespaces := append(defaultNamespaces, "ns1", "ns2")
-		nsList := api.NamespaceList{}
+		nsList := v1.NamespaceList{}
 		for _, namespace := range namespaces {
-			nsList.Items = append(nsList.Items, api.Namespace{ObjectMeta: api.ObjectMeta{Name: namespace}})
+			nsList.Items = append(nsList.Items, v1.Namespace{ObjectMeta: v1.ObjectMeta{Name: namespace}})
 		}
 
 		listClusterResp := newListClusterResp(leaseableClusters)

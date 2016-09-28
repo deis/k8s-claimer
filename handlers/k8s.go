@@ -6,9 +6,10 @@ import (
 
 	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/client/restclient"
-	kcl "k8s.io/kubernetes/pkg/client/unversioned"
+
+	"k8s.io/client-go/1.4/kubernetes"
+	"k8s.io/client-go/1.4/pkg/api/v1"
+	"k8s.io/client-go/1.4/rest"
 )
 
 var (
@@ -42,7 +43,7 @@ func findExpiredLeases(leaseMap *leases.Map) ([]*leases.UUIDAndLease, error) {
 	return nil, errNoExpiredLeases
 }
 
-func saveAnnotations(services k8s.ServiceUpdater, svc *api.Service, leaseMap *leases.Map) error {
+func saveAnnotations(services k8s.ServiceUpdater, svc *v1.Service, leaseMap *leases.Map) error {
 	annos, err := leaseMap.ToAnnotations()
 	if err != nil {
 		return err
@@ -56,8 +57,8 @@ func saveAnnotations(services k8s.ServiceUpdater, svc *api.Service, leaseMap *le
 
 // CreateKubeClientFromConfig creates a new Kubernetes client from the given configuration.
 // returns nil and the appropriate error if the client couldn't be created for any reason
-func CreateKubeClientFromConfig(conf *k8s.KubeConfig) (*kcl.Client, error) {
-	rcConf := new(restclient.Config)
+func CreateKubeClientFromConfig(conf *k8s.KubeConfig) (*kubernetes.Clientset, error) {
+	rcConf := new(rest.Config)
 	if len(conf.Clusters) < 1 {
 		return nil, errNoClustersInConfig
 	}
@@ -77,5 +78,5 @@ func CreateKubeClientFromConfig(conf *k8s.KubeConfig) (*kcl.Client, error) {
 	rcConf.UserAgent = "k8s-claimer"
 	rcConf.Insecure = cluster.InsecureSkipTLSVerify
 
-	return kcl.New(rcConf)
+	return kubernetes.NewForConfig(rcConf)
 }
