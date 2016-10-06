@@ -36,12 +36,19 @@ func kubeNamespacesFromConfig() func(*k8s.KubeConfig) (k8s.NamespaceListerDelete
 	}
 }
 
-func configureRoutesWithAuth(serveMux *http.ServeMux, createLeaseHandler http.Handler, deleteLeaseHandler http.Handler, authToken string,
-) {
+func configureRoutesWithAuth(serveMux *http.ServeMux, createLeaseHandler http.Handler, deleteLeaseHandler http.Handler, authToken string) {
 	createLeaseHandler = htp.MethodMux(map[htp.Method]http.Handler{htp.Post: createLeaseHandler})
 	deleteLeaseHandler = htp.MethodMux(map[htp.Method]http.Handler{htp.Delete: deleteLeaseHandler})
+
 	serveMux.Handle("/lease", handlers.WithAuth(authToken, authTokenKey, createLeaseHandler))
 	serveMux.Handle("/lease/", handlers.WithAuth(authToken, authTokenKey, deleteLeaseHandler))
+}
+
+//CreateHealthzHandler returns an http.Handler
+func CreateHealthzHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 }
 
 func main() {
@@ -93,6 +100,9 @@ func main() {
 		serverConf.ClearNamespaces,
 		kubeNamespacesFromConfig(),
 	)
+
+	mux.Handle("/healthz", CreateHealthzHandler())
+
 	configureRoutesWithAuth(mux, createLeaseHandler, deleteLeaseHandler, serverConf.AuthToken)
 
 	log.Printf("Running %s on %s", appName, serverConf.HostStr())
