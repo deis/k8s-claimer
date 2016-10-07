@@ -80,14 +80,12 @@ func TestConfigureRoutes(t *testing.T) {
 		assert.NoErr(t, err)
 		res := httptest.NewRecorder()
 		mux.ServeHTTP(res, req)
-		assert.Equal(
-			t,
+		assert.Equal(t,
 			res.Code,
 			testCase.respCode,
 			fmt.Sprintf("response code for %s %s", testCase.method, testCase.path),
 		)
-		assert.Equal(
-			t,
+		assert.Equal(t,
 			strings.TrimSpace(string(res.Body.Bytes())),
 			testCase.respBody,
 			fmt.Sprintf("response body for %s %s", testCase.method, testCase.path),
@@ -118,4 +116,14 @@ func TestKubeNamespacesFromConfig(t *testing.T) {
 	ld, err = fn(&cfg)
 	assert.NoErr(t, err)
 	assert.NotNil(t, ld, "namespace lister/deleter")
+}
+
+func TestHealthz(t *testing.T) {
+	hdl := CreateHealthzHandler()
+	req, err := http.NewRequest("GET", "/healthz", nil)
+	assert.NoErr(t, err)
+
+	res := httptest.NewRecorder()
+	hdl.ServeHTTP(res, req)
+	assert.Equal(t, res.Code, http.StatusOK, "response code")
 }
