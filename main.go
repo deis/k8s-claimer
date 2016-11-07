@@ -10,8 +10,8 @@ import (
 	"github.com/deis/k8s-claimer/handlers"
 	"github.com/deis/k8s-claimer/htp"
 	"github.com/deis/k8s-claimer/k8s"
-	"k8s.io/client-go/1.4/kubernetes"
-	"k8s.io/client-go/1.4/rest"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 const (

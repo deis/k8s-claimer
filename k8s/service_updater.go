@@ -1,7 +1,7 @@
 package k8s
 
 import (
-	"k8s.io/client-go/1.4/pkg/api/v1"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 // ServiceUpdater is a (k8s.io/kubernetes/pkg/client/unversioned).ServiceInterface compatible

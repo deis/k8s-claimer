@@ -8,7 +8,7 @@ import (
 	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/deis/k8s-claimer/testutil"
-	"k8s.io/client-go/1.4/pkg/api/v1"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 const (
