@@ -1,12 +1,10 @@
 package: github.com/deis/k8s-claimer
-ignore:
-- k8s.io/kubernetes
 import:
 - package: github.com/kelseyhightower/envconfig
 - package: github.com/pborman/uuid
 - package: cloud.google.com/go
   subpackages:
   - container
-- package: k8s.io/client-go/1.4
+- package: k8s.io/client-go
 - package: github.com/arschles/assert
 - package: github.com/codegangsta/cli

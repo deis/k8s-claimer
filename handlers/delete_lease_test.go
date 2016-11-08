@@ -11,7 +11,7 @@ import (
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/deis/k8s-claimer/testutil"
 	"github.com/pborman/uuid"
-	"k8s.io/client-go/1.4/pkg/api/v1"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 func getNSFunc(nsListerDeleter k8s.NamespaceListerDeleter, err error) func(*k8s.KubeConfig) (k8s.NamespaceListerDeleter, error) {

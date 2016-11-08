@@ -9,7 +9,7 @@ import (
 
 	container "google.golang.org/api/container/v1"
 
-	"k8s.io/client-go/1.4/pkg/api/v1"
+	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/arschles/assert"
 	"github.com/deis/k8s-claimer/htp"
