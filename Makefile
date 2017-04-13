@@ -10,6 +10,7 @@ DEV_ENV_PREFIX := docker run --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_
 DEV_ENV_CMD := ${DEV_ENV_PREFIX} ${DEV_ENV_IMAGE}
 
 DEIS_BINARY_NAME ?= ./deis
+DEIS_APP_NAME ?= ${SHORT_NAME}
 
 DIST_DIR := _dist
 BINARY_NAME := k8s-claimer
@@ -33,7 +34,9 @@ docker-build:
 	docker build ${DOCKER_BUILD_FLAGS} -t ${IMAGE} rootfs
 	docker tag ${IMAGE} ${MUTABLE_IMAGE}
 
-deploy-to-deis:
+.PHONY: deploy
+deploy:
+	@${DEIS_BINARY_NAME} login ${DEIS_URL} --username="${DEIS_USERNAME}" --password="${DEIS_PASSWORD}"
 	${DEIS_BINARY_NAME} pull ${IMAGE} -a ${DEIS_APP_NAME}
 
 build-cli-cross:
