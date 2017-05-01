@@ -15,24 +15,27 @@ DEIS_APP_NAME ?= ${SHORT_NAME}
 DIST_DIR := _dist
 BINARY_NAME := k8s-claimer
 
+build: build-binary docker-build
+push: docker-push
+
 bootstrap:
 	${DEV_ENV_CMD} glide install
 
 glideup:
 	${DEV_ENV_CMD} glide up
 
-build:
+build-binary:
 	${DEV_ENV_PREFIX} -e CGO_ENABLED=0 ${DEV_ENV_IMAGE} go build -a -installsuffix cgo ${LDFLAGS} -o rootfs/bin/boot
+
+docker-build:
+	docker build ${DOCKER_BUILD_FLAGS} -t ${IMAGE} rootfs
+	docker tag ${IMAGE} ${MUTABLE_IMAGE}
 
 test:
 	${DEV_ENV_CMD} sh -c 'go test $$(glide nv)'
 
 test-cover:
 	${DEV_ENV_CMD} test-cover.sh
-
-docker-build:
-	docker build ${DOCKER_BUILD_FLAGS} -t ${IMAGE} rootfs
-	docker tag ${IMAGE} ${MUTABLE_IMAGE}
 
 .PHONY: deploy
 deploy:

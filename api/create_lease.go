@@ -15,6 +15,7 @@ type CreateLeaseReq struct {
 	MaxTimeSec     int    `json:"max_time"`
 	ClusterRegex   string `json:"cluster_regex"`
 	ClusterVersion string `json:"cluster_version"`
+	CloudProvider  string `json:"cloud_provider"`
 }
 
 // MaxTimeDur returns the maximum time specified in c as a time.Duration
@@ -35,6 +36,7 @@ type CreateLeaseResp struct {
 	Token          string `json:"uuid"`
 	ClusterName    string `json:"cluster_name"`
 	ClusterVersion string `json:"cluster_version"`
+	CloudProvider  string `json:"cloud_provider"`
 }
 
 // DecodeCreateLeaseResp decodes rdr from its JSON representation into a CreateLeaseResp.

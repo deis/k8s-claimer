@@ -86,7 +86,7 @@ NAME:
    k8s-claimer lease create - Creates a new lease and returns 'export' statements to set the lease values as environment variables. Set the 'env-prefix' flag to prefix the environment variable names. If you pass that flag, a '_' character will separate the prefix with the rest of the environment variable name. Below are the basic environment variable names:
 
 - IP - the IP address of the Kubernetes master server
-- TOKEN - contains the lease token. Use this when you run 'k8s-claimer lease delete'
+- TOKEN - contains the lease token. Use this when you run 'k8s-claimer-cli lease delete'
 - CLUSTER_NAME - contains the name of the cluster. For informational purposes only
 
 The Kubeconfig file will be written to kubeconfig-file
@@ -101,6 +101,7 @@ OPTIONS:
    --kubeconfig-file value  The location of the resulting Kubeconfig file (default: "./kubeconfig.yaml")
    --cluster-regex value    A regular expression that will be used to match which cluster you lease
    --cluster-version value  A version string that will be used to find a cluster to lease
+   --provider value         Which cloud provider to use when creating a cluster lease
 ```
 
 Example
@@ -118,16 +119,19 @@ $ k8s-claimer lease delete --help
 NAME:
    k8s-claimer lease delete - Releases a currently held lease. Pass the lease token as the first and only parameter to this command. For example:
 
-k8s-claimer lease delete $TOKEN
+k8s-claimer-cli lease delete $TOKEN
 
 
 USAGE:
-   k8s-claimer lease delete [arguments...]
+   k8s-claimer lease delete [command options] [arguments...]
+
+OPTIONS:
+   --provider value  Which cloud provider to use when deleting a cluster lease
 ```
 
 Example
 ```shell
-$ k8s-claimer --server <server-name> lease delete <token>
+$ k8s-claimer --server <server-name> --provider GKE lease delete <token>
 Deleted lease <token>
 ```
 

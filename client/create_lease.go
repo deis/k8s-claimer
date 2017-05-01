@@ -10,10 +10,10 @@ import (
 )
 
 // CreateLease creates a lease
-func CreateLease(server, authToken, clusterVersion, clusterRegex string, durationSec int) (*api.CreateLeaseResp, error) {
+func CreateLease(server, authToken, cloudProvider, clusterVersion, clusterRegex string, durationSec int) (*api.CreateLeaseResp, error) {
 	endpt := newEndpoint(htp.Post, server, "lease")
 	reqBuf := new(bytes.Buffer)
-	req := api.CreateLeaseReq{MaxTimeSec: durationSec, ClusterRegex: clusterRegex, ClusterVersion: clusterVersion}
+	req := api.CreateLeaseReq{MaxTimeSec: durationSec, ClusterRegex: clusterRegex, ClusterVersion: clusterVersion, CloudProvider: cloudProvider}
 	if err := json.NewEncoder(reqBuf).Encode(req); err != nil {
 		return nil, errEncoding{err: err}
 	}

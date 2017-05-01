@@ -23,11 +23,11 @@ func CreateLease(c *cli.Context) error {
 	// inspect env for auth env var
 	authToken := os.Getenv("AUTH_TOKEN")
 	if authToken == "" {
-		log.Fatalf("An authorization token is required in the form of an env var AUTH_TOKEN")
+		log.Fatal("An authorization token is required in the form of an env var AUTH_TOKEN")
 	}
 	server := c.GlobalString("server")
 	if server == "" {
-		log.Fatalf("Server missing")
+		log.Fatal("Server missing")
 	}
 	durationSec := c.Int("duration")
 	if durationSec <= 0 {
@@ -36,9 +36,13 @@ func CreateLease(c *cli.Context) error {
 	envPrefix := c.String("env-prefix")
 	clusterRegex := c.String("cluster-regex")
 	clusterVersion := c.String("cluster-version")
+	cloudProvider := c.String("cloud-provider")
+	if cloudProvider == "" {
+		log.Fatal("Cloud Provider not provided")
+	}
 	kcfgFile := c.String("kubeconfig-file")
 	if len(kcfgFile) < 1 {
-		log.Fatalf("Missing kubeconfig-file")
+		log.Fatal("Missing kubeconfig-file")
 	}
 
 	fd, err := os.Create(kcfgFile)
@@ -47,7 +51,7 @@ func CreateLease(c *cli.Context) error {
 	}
 	defer fd.Close()
 
-	resp, err := client.CreateLease(server, authToken, clusterVersion, clusterRegex, durationSec)
+	resp, err := client.CreateLease(server, authToken, cloudProvider, clusterVersion, clusterRegex, durationSec)
 	if err != nil {
 		log.Fatalf("Error creating lease (%s)", err)
 	}
