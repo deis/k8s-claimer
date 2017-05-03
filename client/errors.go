@@ -21,7 +21,7 @@ type errHTTPRequest struct {
 }
 
 func (e errHTTPRequest) Error() string {
-	return fmt.Sprintf("error executing HTTP request on %s (%s)", e.endpoint, e.err)
+	return fmt.Sprintf("Error executing HTTP request on %s -- %s", e.endpoint, e.err)
 }
 
 type errEncoding struct {
@@ -29,7 +29,7 @@ type errEncoding struct {
 }
 
 func (e errEncoding) Error() string {
-	return fmt.Sprintf("Error encoding request body (%s)", e.err)
+	return fmt.Sprintf("Error encoding request body -- %s", e.err)
 }
 
 type errDecoding struct {
@@ -37,5 +37,5 @@ type errDecoding struct {
 }
 
 func (e errDecoding) Error() string {
-	return fmt.Sprintf("Error decoding response body (%s)", e.err)
+	return fmt.Sprintf("Error decoding response body -- %s", e.err)
 }

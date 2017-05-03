@@ -53,7 +53,7 @@ func CreateLease(c *cli.Context) error {
 
 	resp, err := client.CreateLease(server, authToken, cloudProvider, clusterVersion, clusterRegex, durationSec)
 	if err != nil {
-		log.Fatalf("Error creating lease: %s", err)
+		log.Fatalf("Error returned from server when creating lease: %s", err)
 	}
 
 	kcfg, err := resp.KubeConfigBytes()
@@ -65,7 +65,7 @@ func CreateLease(c *cli.Context) error {
 	fmt.Println(exportVar(envPrefix, clusterNameEnvVarName, resp.ClusterName))
 
 	if _, err := io.Copy(fd, bytes.NewBuffer(kcfg)); err != nil {
-		log.Fatalf("Error writing new Kubeconfig file to %s (%s)", kcfgFile, err)
+		log.Fatalf("Error writing new Kubeconfig file to %s: %s", kcfgFile, err)
 	}
 	return nil
 }
