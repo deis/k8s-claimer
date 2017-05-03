@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/deis/k8s-claimer/api"
@@ -23,7 +24,9 @@ func CreateLease(server, authToken, cloudProvider, clusterVersion, clusterRegex 
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		return nil, errInvalidStatusCode{endpoint: endpt.String(), code: res.StatusCode}
+		bodyBytes, _ := ioutil.ReadAll(res.Body)
+		message := string(bodyBytes)
+		return nil, APIError{endpoint: endpt.String(), code: res.StatusCode, message: message}
 	}
 
 	decodedRes, err := api.DecodeCreateLeaseResp(res.Body)

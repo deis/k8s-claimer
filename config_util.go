@@ -20,3 +20,4 @@ func parseServerConfig(appName string) (*config.Server, error) {
 	}
 	return conf, nil
 }
+

@@ -24,8 +24,12 @@ func DeleteLease(c *cli.Context) error {
 		log.Fatalf("Lease token missing")
 	}
 	leaseToken := c.Args()[0]
+	cloudProvider := c.String("provider")
+	if cloudProvider == "" {
+		log.Fatal("Cloud Provider not provided")
+	}
 
-	if err := client.DeleteLease(server, authToken, leaseToken); err != nil {
+	if err := client.DeleteLease(server, authToken, cloudProvider, leaseToken); err != nil {
 		log.Fatalf("Error deleting lease: %s", err)
 	}
 

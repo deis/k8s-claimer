@@ -4,13 +4,15 @@ import (
 	"fmt"
 )
 
-type errInvalidStatusCode struct {
+// APIError is an error returned from the api
+type APIError struct {
 	endpoint string
 	code     int
+	message  string
 }
 
-func (e errInvalidStatusCode) Error() string {
-	return fmt.Sprintf("invalid status code for endpoing (%s): %d", e.endpoint, e.code)
+func (e APIError) Error() string {
+	return fmt.Sprintf("%s", e.message)
 }
 
 type errHTTPRequest struct {

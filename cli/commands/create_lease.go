@@ -36,7 +36,7 @@ func CreateLease(c *cli.Context) error {
 	envPrefix := c.String("env-prefix")
 	clusterRegex := c.String("cluster-regex")
 	clusterVersion := c.String("cluster-version")
-	cloudProvider := c.String("cloud-provider")
+	cloudProvider := c.String("provider")
 	if cloudProvider == "" {
 		log.Fatal("Cloud Provider not provided")
 	}
@@ -47,18 +47,18 @@ func CreateLease(c *cli.Context) error {
 
 	fd, err := os.Create(kcfgFile)
 	if err != nil {
-		log.Fatalf("Error opening %s (%s)", kcfgFile, err)
+		log.Fatalf("Error opening %s: %s", kcfgFile, err)
 	}
 	defer fd.Close()
 
 	resp, err := client.CreateLease(server, authToken, cloudProvider, clusterVersion, clusterRegex, durationSec)
 	if err != nil {
-		log.Fatalf("Error creating lease (%s)", err)
+		log.Fatalf("Error creating lease: %s", err)
 	}
 
 	kcfg, err := resp.KubeConfigBytes()
 	if err != nil {
-		log.Fatalf("Error decoding kubeconfig (%s)", err)
+		log.Fatalf("Error decoding kubeconfig: %s", err)
 	}
 	fmt.Println(exportVar(envPrefix, ipEnvVarName, resp.IP))
 	fmt.Println(exportVar(envPrefix, tokenEnvVarName, resp.Token))

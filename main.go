@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
@@ -56,13 +58,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error getting server config (%s)", err)
 	}
+	serverConf.Print()
 	gCloudConf, err := parseGoogleConfig(appName)
 	if err != nil {
-		log.Fatalf("Error getting google cloud config (%s)", err)
+		log.Fatalf("Error getting google cloud config (%s) -- %+v", err, gCloudConf)
 	}
-	gCloudConfFile, err := config.GoogleCloudAccountInfo(gCloudConf.AccountFileBase64)
-	if err != nil {
-		log.Fatalf("Error getting google cloud config (%s)", err)
+	gCloudConfFile := new(config.GoogleCloudAccountFile)
+	if err := json.NewDecoder(bytes.NewBuffer([]byte(gCloudConf.AccountFile))).Decode(gCloudConfFile); err != nil {
+		log.Fatalf("Error parsing google cloud config (%s)\n %+v", err, gCloudConf.AccountFile)
 	}
 	containerService, err := gke.GetContainerService(
 		gCloudConfFile.ClientEmail,
@@ -105,6 +108,6 @@ func main() {
 
 	configureRoutesWithAuth(mux, createLeaseHandler, deleteLeaseHandler, serverConf.AuthToken)
 
-	log.Printf("Running %s on %s", appName, serverConf.HostStr())
+	log.Println("k8s claimer started!")
 	http.ListenAndServe(serverConf.HostStr(), mux)
 }

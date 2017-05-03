@@ -94,8 +94,8 @@ func CreateLease(
 
 		clusterMap, svc, err := getSvcsAndClusters(clusterLister, services, gCloudProjID, gCloudZone, k8sServiceName)
 		if err != nil {
-			log.Printf("error listing GKE clusters or talking to the k8s API (%s)", err)
-			htp.Error(w, http.StatusInternalServerError, "error listing GKE clusters or talking to the k8s API (%s)", err)
+			log.Printf("Error listing GKE clusters or talking to the k8s API\n\t %s", err)
+			htp.Error(w, http.StatusInternalServerError, "Error listing GKE clusters or talking to the k8s API\n\t %s", err)
 			return
 		}
 
