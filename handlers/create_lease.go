@@ -4,76 +4,12 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/deis/k8s-claimer/api"
-	"github.com/deis/k8s-claimer/clusters"
-	"github.com/deis/k8s-claimer/gke"
 	"github.com/deis/k8s-claimer/htp"
 	"github.com/deis/k8s-claimer/k8s"
-	"github.com/deis/k8s-claimer/leases"
-	"github.com/pborman/uuid"
-	"k8s.io/client-go/pkg/api/v1"
+	"github.com/deis/k8s-claimer/providers/gke"
 )
-
-func getSvcsAndClusters(
-	clusterLister gke.ClusterLister,
-	services k8s.ServiceGetterUpdater,
-	gCloudProjID,
-	gCloudZone,
-	k8sServiceName string,
-) (*clusters.Map, *v1.Service, error) {
-
-	errCh := make(chan error)
-	doneCh := make(chan struct{})
-	clusterMapCh := make(chan *clusters.Map)
-	apiServiceCh := make(chan *v1.Service)
-	defer close(doneCh)
-	go func() {
-		svc, err := services.Get(k8sServiceName)
-		if err != nil {
-			select {
-			case errCh <- err:
-			case <-doneCh:
-			}
-			return
-		}
-		select {
-		case apiServiceCh <- svc:
-		case <-doneCh:
-		}
-	}()
-	go func() {
-		clusterMap, err := clusters.ParseMapFromGKE(clusterLister, gCloudProjID, gCloudZone)
-		if err != nil {
-			select {
-			case errCh <- err:
-			case <-doneCh:
-			}
-			return
-		}
-		select {
-		case clusterMapCh <- clusterMap:
-		case <-doneCh:
-		}
-	}()
-
-	var clusterMapRet *clusters.Map
-	var apiServiceRet *v1.Service
-	for {
-		select {
-		case err := <-errCh:
-			return nil, nil, err
-		case cm := <-clusterMapCh:
-			clusterMapRet = cm
-		case svc := <-apiServiceCh:
-			apiServiceRet = svc
-		}
-		if clusterMapRet != nil && apiServiceRet != nil {
-			return clusterMapRet, apiServiceRet, nil
-		}
-	}
-}
 
 // CreateLease creates the handler that responds to the POST /lease endpoint
 func CreateLease(
@@ -83,7 +19,6 @@ func CreateLease(
 	gCloudProjID,
 	gCloudZone string,
 ) http.Handler {
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		req := new(api.CreateLeaseReq)
 		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
@@ -92,72 +27,16 @@ func CreateLease(
 			return
 		}
 
-		clusterMap, svc, err := getSvcsAndClusters(clusterLister, services, gCloudProjID, gCloudZone, k8sServiceName)
-		if err != nil {
-			log.Printf("Error listing GKE clusters or talking to the k8s API -- %s", err)
-			htp.Error(w, http.StatusInternalServerError, "Error listing GKE clusters or talking to the k8s API -- %s", err)
+		switch req.CloudProvider {
+		case "google":
+			gke.Lease(w, req, clusterLister, services, k8sServiceName, gCloudProjID, gCloudZone)
 			return
-		}
-
-		leaseMap, err := leases.ParseMapFromAnnotations(svc.Annotations)
-		if err != nil {
-			log.Printf("Error parsing leases from Kubernetes annotations -- %s", err)
-			htp.Error(w, http.StatusInternalServerError, "error parsing leases from Kubernetes annotations -- %s", err)
+		case "azure":
+			// fork to azure leasing here
 			return
-		}
-
-		availableCluster, err := searchForFreeCluster(clusterMap, leaseMap, req.ClusterRegex, req.ClusterVersion)
-		if err != nil {
-			switch e := err.(type) {
-			case errNoAvailableOrExpiredClustersFound:
-				log.Printf("No available clusters found")
-				htp.Error(w, http.StatusConflict, "No available clusters found")
-				return
-			case errExpiredLeaseGKEMissing:
-				log.Printf("Cluster %s has an expired lease but doesn't exist in GKE", e.clusterName)
-				htp.Error(w, http.StatusInternalServerError, "Cluster %s has an expired lease but doesn't exist in GKE", e.clusterName)
-				return
-			default:
-				log.Printf("Unknown error %s", e.Error())
-				htp.Error(w, http.StatusInternalServerError, "Unknown error %s", e.Error())
-				return
-			}
-		}
-
-		newToken := uuid.NewUUID()
-		kubeConfig, err := createKubeConfigFromCluster(availableCluster)
-		if err != nil {
-			log.Printf("Error creating kubeconfig file for cluster %s -- %s", availableCluster.Name, err)
-			htp.Error(w, http.StatusInternalServerError, "Error creating kubeconfig file for cluster %s -- %s", availableCluster.Name, err)
-			return
-		}
-
-		kubeConfigStr, err := marshalAndEncodeKubeConfig(kubeConfig)
-		if err != nil {
-			log.Printf("Error marshaling & encoding kubeconfig -- %s", err)
-			htp.Error(w, http.StatusInternalServerError, "Error marshaling & encoding kubeconfig -- %s", err)
-			return
-		}
-
-		resp := api.CreateLeaseResp{
-			KubeConfigStr:  kubeConfigStr,
-			IP:             availableCluster.Endpoint,
-			Token:          newToken.String(),
-			ClusterName:    availableCluster.Name,
-			ClusterVersion: availableCluster.CurrentNodeVersion,
-		}
-
-		leaseMap.CreateLease(newToken, leases.NewLease(availableCluster.Name, req.ExpirationTime(time.Now())))
-
-		if err := saveAnnotations(services, svc, leaseMap); err != nil {
-			log.Printf("Error saving new lease to Kubernetes annotations -- %s", err)
-			htp.Error(w, http.StatusInternalServerError, "Error saving new lease to Kubernetes annotations -- %s", err)
-			return
-		}
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			log.Printf("Error encoding json -- %s", err)
-			htp.Error(w, http.StatusInternalServerError, "Error encoding json -- %s", err)
-			return
+		default:
+			log.Printf("Unable to find suitable provider for this request -- Provider:%s", req.CloudProvider)
+			htp.Error(w, http.StatusBadRequest, "Unable to find suitable provider for this request -- Provider:%s", req.CloudProvider)
 		}
 	})
 }

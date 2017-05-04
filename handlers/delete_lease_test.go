@@ -6,25 +6,21 @@ import (
 	"testing"
 	"time"
 
+	"k8s.io/client-go/pkg/api/v1"
+
 	"github.com/arschles/assert"
+	"github.com/deis/k8s-claimer/providers/gke"
 	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
 	"github.com/deis/k8s-claimer/testutil"
 	"github.com/pborman/uuid"
-	"k8s.io/client-go/pkg/api/v1"
 )
 
-func getNSFunc(nsListerDeleter k8s.NamespaceListerDeleter, err error) func(*k8s.KubeConfig) (k8s.NamespaceListerDeleter, error) {
-	return func(*k8s.KubeConfig) (k8s.NamespaceListerDeleter, error) {
-		return nsListerDeleter, err
-	}
-}
-
 func TestDeleteLeaseNoToken(t *testing.T) {
-	getterUpdater := newFakeServiceGetterUpdater(nil, nil, nil, nil)
-	clusterLister := newFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
-	nsListerDeleter := newFakeNamespaceListerDeleter(&v1.NamespaceList{}, nil, nil)
-	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
+	getterUpdater := k8s.NewFakeServiceGetterUpdater(nil, nil, nil, nil)
+	clusterLister := gke.NewFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
+	nsListerDeleter := k8s.NewFakeNamespaceListerDeleter(&v1.NamespaceList{}, nil, nil)
+	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, k8s.GetNSFunc(nsListerDeleter, nil))
 	req, err := http.NewRequest("DELETE", "/lease", nil)
 	req.Header.Set("Authorization", "some awesome token")
 	assert.NoErr(t, err)
@@ -34,10 +30,10 @@ func TestDeleteLeaseNoToken(t *testing.T) {
 }
 
 func TestDeleteLeaseInvalidLeaseToken(t *testing.T) {
-	getterUpdater := newFakeServiceGetterUpdater(nil, nil, nil, nil)
-	clusterLister := newFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
-	nsListerDeleter := newFakeNamespaceListerDeleter(&v1.NamespaceList{}, nil, nil)
-	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
+	getterUpdater := k8s.NewFakeServiceGetterUpdater(nil, nil, nil, nil)
+	clusterLister := gke.NewFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
+	nsListerDeleter := k8s.NewFakeNamespaceListerDeleter(&v1.NamespaceList{}, nil, nil)
+	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, k8s.GetNSFunc(nsListerDeleter, nil))
 	req, err := http.NewRequest("DELETE", "/lease/abcd", nil)
 	req.Header.Set("Authorization", "some awesome token")
 	assert.NoErr(t, err)
@@ -49,15 +45,15 @@ func TestDeleteLeaseInvalidLeaseToken(t *testing.T) {
 func TestDeleteLeaseInvalidAnnotations(t *testing.T) {
 	// Issue a DELETE with a lease token that doesn't point to a valid lease.
 	// Annotations have invalid data in them, which the lease parser should just ignore.
-	getterUpdater := newFakeServiceGetterUpdater(
+	getterUpdater := k8s.NewFakeServiceGetterUpdater(
 		&v1.Service{ObjectMeta: v1.ObjectMeta{Annotations: map[string]string{"a": "b"}}},
 		nil,
 		nil,
 		nil,
 	)
-	clusterLister := newFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
-	nsListerDeleter := newFakeNamespaceListerDeleter(&v1.NamespaceList{}, nil, nil)
-	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
+	clusterLister := gke.NewFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
+	nsListerDeleter := k8s.NewFakeNamespaceListerDeleter(&v1.NamespaceList{}, nil, nil)
+	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, k8s.GetNSFunc(nsListerDeleter, nil))
 	req, err := http.NewRequest("DELETE", "/lease/"+uuid.New(), nil)
 	req.Header.Set("Authorization", "some awesome token")
 	assert.NoErr(t, err)
@@ -67,15 +63,15 @@ func TestDeleteLeaseInvalidAnnotations(t *testing.T) {
 }
 
 func TestDeleteLeaseNoSuchLease(t *testing.T) {
-	getterUpdater := newFakeServiceGetterUpdater(
+	getterUpdater := k8s.NewFakeServiceGetterUpdater(
 		&v1.Service{ObjectMeta: v1.ObjectMeta{Annotations: map[string]string{}}},
 		nil,
 		nil,
 		nil,
 	)
-	clusterLister := newFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
-	nsListerDeleter := newFakeNamespaceListerDeleter(&v1.NamespaceList{}, nil, nil)
-	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
+	clusterLister := gke.NewFakeClusterLister(newListClusterResp(testutil.GetClusters()), nil)
+	nsListerDeleter := k8s.NewFakeNamespaceListerDeleter(&v1.NamespaceList{}, nil, nil)
+	hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, k8s.GetNSFunc(nsListerDeleter, nil))
 	req, err := http.NewRequest("DELETE", "/lease/"+uuid.New(), nil)
 	req.Header.Set("Authorization", "some awesome token")
 	assert.NoErr(t, err)
@@ -100,7 +96,7 @@ func TestDeleteLeaseExists(t *testing.T) {
 		},
 	)
 	for i, u := range uuids {
-		getterUpdater := newFakeServiceGetterUpdater(
+		getterUpdater := k8s.NewFakeServiceGetterUpdater(
 			&v1.Service{ObjectMeta: v1.ObjectMeta{Annotations: annos}},
 			nil,
 			nil,
@@ -116,9 +112,9 @@ func TestDeleteLeaseExists(t *testing.T) {
 		}
 
 		listClusterResp := newListClusterResp(testutil.GetClusters())
-		clusterLister := newFakeClusterLister(listClusterResp, nil)
-		nsListerDeleter := newFakeNamespaceListerDeleter(&nsList, nil, nil)
-		hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, getNSFunc(nsListerDeleter, nil))
+		clusterLister := gke.NewFakeClusterLister(listClusterResp, nil)
+		nsListerDeleter := k8s.NewFakeNamespaceListerDeleter(&nsList, nil, nil)
+		hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", true, k8s.GetNSFunc(nsListerDeleter, nil))
 		req, err := http.NewRequest("DELETE", path, nil)
 		req.Header.Set("Authorization", "some awesome token")
 		if err != nil {
@@ -161,7 +157,7 @@ func TestDeleteLeaseExistsNoClearNamespaces(t *testing.T) {
 		},
 	)
 	for i, u := range uuids {
-		getterUpdater := newFakeServiceGetterUpdater(
+		getterUpdater := k8s.NewFakeServiceGetterUpdater(
 			&v1.Service{ObjectMeta: v1.ObjectMeta{Annotations: annos}},
 			nil,
 			nil,
@@ -177,9 +173,9 @@ func TestDeleteLeaseExistsNoClearNamespaces(t *testing.T) {
 		}
 
 		listClusterResp := newListClusterResp(leaseableClusters)
-		clusterLister := newFakeClusterLister(listClusterResp, nil)
-		nsListerDeleter := newFakeNamespaceListerDeleter(&nsList, nil, nil)
-		hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", false, getNSFunc(nsListerDeleter, nil))
+		clusterLister := gke.NewFakeClusterLister(listClusterResp, nil)
+		nsListerDeleter := k8s.NewFakeNamespaceListerDeleter(&nsList, nil, nil)
+		hdl := DeleteLease(getterUpdater, clusterLister, "claimer", "proj1", "zone1", false, k8s.GetNSFunc(nsListerDeleter, nil))
 		req, err := http.NewRequest("DELETE", path, nil)
 		req.Header.Set("Authorization", "some awesome token")
 		if err != nil {

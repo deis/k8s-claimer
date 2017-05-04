@@ -1,7 +1,18 @@
 package k8s
 
 import (
+	"encoding/base64"
+	"fmt"
+	"strings"
+
+	container "google.golang.org/api/container/v1"
+
+	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/pkg/runtime"
+)
+
+const (
+	kubeconfigAPIVersion = "v1"
 )
 
 // KubeConfig holds the information needed to connect to remote kubernetes clusters as a given user
@@ -81,4 +92,62 @@ type NamedExtension struct {
 type AuthProviderConfig struct {
 	Name   string            `yaml:"name"`
 	Config map[string]string `yaml:"config"`
+}
+
+// MarshalAndEncodeKubeConfig takes a kubeconfig and base64 encodes it
+func MarshalAndEncodeKubeConfig(cfg *KubeConfig) (string, error) {
+	y, err := yaml.Marshal(cfg)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(y), nil
+}
+
+// CreateKubeConfigFromCluster generates a valid KubeConfig object from a leased cluster
+func CreateKubeConfigFromCluster(c *container.Cluster) (*KubeConfig, error) {
+	contextName := strings.ToLower(c.Name)
+	authInfoName := contextName
+
+	var clusters []NamedCluster
+	cluster := Cluster{
+		Server: fmt.Sprintf("https://%s", c.Endpoint),
+		CertificateAuthorityData: c.MasterAuth.ClusterCaCertificate,
+	}
+	namedCluster := NamedCluster{
+		Name:    c.Name,
+		Cluster: cluster,
+	}
+	clusters = append(clusters, namedCluster)
+
+	var contexts []NamedContext
+	context := Context{
+		Cluster:  c.Name,
+		AuthInfo: authInfoName,
+	}
+	namedContext := NamedContext{
+		Name:    contextName,
+		Context: context,
+	}
+	contexts = append(contexts, namedContext)
+
+	var authInfos []NamedAuthInfo
+	authInfo := AuthInfo{
+		ClientCertificateData: c.MasterAuth.ClientCertificate,
+		ClientKeyData:         c.MasterAuth.ClientKey,
+		Username:              c.MasterAuth.Username,
+		Password:              c.MasterAuth.Password,
+	}
+	namedAuthInfo := NamedAuthInfo{
+		Name:     authInfoName,
+		AuthInfo: authInfo,
+	}
+	authInfos = append(authInfos, namedAuthInfo)
+
+	return &KubeConfig{
+		CurrentContext: contextName,
+		APIVersion:     kubeconfigAPIVersion,
+		Clusters:       clusters,
+		Contexts:       contexts,
+		AuthInfos:      authInfos,
+	}, nil
 }

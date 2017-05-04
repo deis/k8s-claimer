@@ -8,10 +8,10 @@ import (
 	"net/http"
 
 	"github.com/deis/k8s-claimer/config"
-	"github.com/deis/k8s-claimer/gke"
 	"github.com/deis/k8s-claimer/handlers"
 	"github.com/deis/k8s-claimer/htp"
 	"github.com/deis/k8s-claimer/k8s"
+	"github.com/deis/k8s-claimer/providers/gke"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -30,7 +30,7 @@ func kubeNamespacesFromConfig() func(*k8s.KubeConfig) (k8s.NamespaceListerDelete
 		if conf == nil {
 			return nil, errNilConfig
 		}
-		cl, err := handlers.CreateKubeClientFromConfig(conf)
+		cl, err := k8s.CreateKubeClientFromConfig(conf)
 		if err != nil {
 			return nil, err
 		}

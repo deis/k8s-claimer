@@ -12,7 +12,9 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/arschles/assert"
+	"github.com/deis/k8s-claimer/providers/gke"
 	"github.com/deis/k8s-claimer/htp"
+	"github.com/deis/k8s-claimer/k8s"
 )
 
 func TestWithAuthValidToken(t *testing.T) {
@@ -21,10 +23,10 @@ func TestWithAuthValidToken(t *testing.T) {
 		Endpoint:   "192.168.1.1",
 		MasterAuth: &container.MasterAuth{},
 	}
-	clusterLister := newFakeClusterLister(&container.ListClustersResponse{
+	clusterLister := gke.NewFakeClusterLister(&container.ListClustersResponse{
 		Clusters: []*container.Cluster{cluster},
 	}, nil)
-	services := newFakeServiceGetterUpdater(&v1.Service{
+	services := k8s.NewFakeServiceGetterUpdater(&v1.Service{
 		ObjectMeta: v1.ObjectMeta{Name: "service1"},
 	}, nil, nil, nil)
 	hdl := CreateLease(clusterLister, services, "", "", "")
@@ -32,7 +34,7 @@ func TestWithAuthValidToken(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.Handle("/lease", WithAuth("auth token", "Authorization", createLeaseHandler))
-	reqBody := `{"max_time":30}`
+	reqBody := `{"max_time":30, "cloud_provider":"google"}`
 	req, err := http.NewRequest("POST", "/lease", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "auth token")
 	assert.NoErr(t, err)

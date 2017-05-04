@@ -1,15 +1,4 @@
-package handlers
-
-import (
-	"testing"
-	"time"
-
-	"github.com/arschles/assert"
-	"github.com/deis/k8s-claimer/k8s"
-	"github.com/deis/k8s-claimer/leases"
-	"github.com/deis/k8s-claimer/testutil"
-	"k8s.io/client-go/pkg/api/v1"
-)
+package k8s
 
 const (
 	ca     = "sample ca"
@@ -192,104 +181,41 @@ v3TGd3xXD9yQIjmugNgxNiwAZzhJs/ZJy++fPSJ1XQxbd9qPghgGoe/ff6G7
 -----END RSA PRIVATE KEY-----`
 )
 
-func newFakeServiceGetter(svc *v1.Service, err error) *k8s.FakeServiceGetter {
-	return &k8s.FakeServiceGetter{Svc: svc, Err: err}
-}
+// func NewFakeServiceGetter(svc *v1.Service, err error) *FakeServiceGetter {
+// 	return &FakeServiceGetter{Svc: svc, Err: err}
+// }
 
-func newFakeServiceUpdater(retSvc *v1.Service, err error) *k8s.FakeServiceUpdater {
-	return &k8s.FakeServiceUpdater{RetSvc: retSvc, Err: err}
-}
+// func NewFakeServiceUpdater(retSvc *v1.Service, err error) *FakeServiceUpdater {
+// 	return &FakeServiceUpdater{RetSvc: retSvc, Err: err}
+// }
 
-func newFakeServiceGetterUpdater(
-	getSvc *v1.Service,
-	getErr error,
-	updateSvc *v1.Service,
-	updateErr error,
-) *k8s.FakeServiceGetterUpdater {
-	return &k8s.FakeServiceGetterUpdater{
-		FakeServiceGetter:  newFakeServiceGetter(getSvc, getErr),
-		FakeServiceUpdater: newFakeServiceUpdater(updateSvc, updateErr),
-	}
-}
+// func NewFakeServiceGetterUpdater(
+// 	getSvc *v1.Service,
+// 	getErr error,
+// 	updateSvc *v1.Service,
+// 	updateErr error,
+// ) *FakeServiceGetterUpdater {
+// 	return &FakeServiceGetterUpdater{
+// 		FakeServiceGetter:  newFakeServiceGetter(getSvc, getErr),
+// 		FakeServiceUpdater: newFakeServiceUpdater(updateSvc, updateErr),
+// 	}
+// }
 
-func newFakeNamespaceLister(nsList *v1.NamespaceList, err error) *k8s.FakeNamespaceLister {
-	return &k8s.FakeNamespaceLister{NsList: nsList, Err: err}
-}
+// func NewFakeNamespaceLister(nsList *v1.NamespaceList, err error) *FakeNamespaceLister {
+// 	return &FakeNamespaceLister{NsList: nsList, Err: err}
+// }
 
-func newFakeNamespaceDeleter(err error) *k8s.FakeNamespaceDeleter {
-	return &k8s.FakeNamespaceDeleter{Err: err}
-}
+// func NewFakeNamespaceDeleter(err error) *FakeNamespaceDeleter {
+// 	return &FakeNamespaceDeleter{Err: err}
+// }
 
-func newFakeNamespaceListerDeleter(
-	listNs *v1.NamespaceList,
-	listErr error,
-	deleteErr error,
-) *k8s.FakeNamespaceListerDeleter {
-	return &k8s.FakeNamespaceListerDeleter{
-		FakeNamespaceLister:  newFakeNamespaceLister(listNs, listErr),
-		FakeNamespaceDeleter: newFakeNamespaceDeleter(deleteErr),
-	}
-}
-
-func TestFindExpiredLeases(t *testing.T) {
-	leaseableClusters := testutil.GetClusters()
-	rawAnnotations := testutil.GetRawAnnotations(
-		leaseableClusters,
-		leases.TimeFormat,
-		func(i int) time.Time {
-			return time.Now().Add(-1 * time.Second)
-		},
-		testutil.DefaultUUIDFunc,
-	)
-	leaseMap, err := leases.ParseMapFromAnnotations(rawAnnotations)
-	assert.NoErr(t, err)
-	expiredLeases, err := findExpiredLeases(leaseMap)
-	assert.NoErr(t, err)
-	assert.NotNil(t, expiredLeases, "there were no expired leases when we expected non-nil")
-
-	rawAnnotations = testutil.GetRawAnnotations(
-		leaseableClusters,
-		leases.TimeFormat,
-		func(int) time.Time { return time.Now().Add(1 * time.Hour) },
-		testutil.DefaultUUIDFunc,
-	)
-	leaseMap, err = leases.ParseMapFromAnnotations(rawAnnotations)
-	assert.NoErr(t, err)
-	expiredLeases, err = findExpiredLeases(leaseMap)
-	assert.Nil(t, expiredLeases, "non-nil expired leases returned when none were expired")
-	assert.Err(t, errNoExpiredLeases, err)
-}
-
-func TestCreateKubeClientFromConfig(t *testing.T) {
-	conf := &k8s.KubeConfig{
-		Kind:        "testKind",
-		APIVersion:  "v1",
-		Preferences: k8s.Preferences{Colors: true},
-		Clusters: []k8s.NamedCluster{
-			k8s.NamedCluster{
-				Name: "test1",
-				Cluster: k8s.Cluster{
-					Server:                   "test.server.com",
-					APIVersion:               "v1",
-					InsecureSkipTLSVerify:    false,
-					CertificateAuthorityData: ca,
-				},
-			},
-		},
-		AuthInfos: []k8s.NamedAuthInfo{
-			k8s.NamedAuthInfo{
-				Name: "test1",
-				AuthInfo: k8s.AuthInfo{
-					ClientCertificateData: pubKey,
-					ClientKeyData:         privKey,
-					Impersonate:           "impersonate1",
-					Username:              "testUser",
-					Password:              "testPass",
-				},
-			},
-		},
-	}
-	cl, err := CreateKubeClientFromConfig(conf)
-	assert.NoErr(t, err)
-	assert.NotNil(t, cl, "kube client")
-}
+// func NewFakeNamespaceListerDeleter(
+// 	listNs *v1.NamespaceList,
+// 	listErr error,
+// 	deleteErr error,
+// ) *FakeNamespaceListerDeleter {
+// 	return &FakeNamespaceListerDeleter{
+// 		FakeNamespaceLister:  NewFakeNamespaceLister(listNs, listErr),
+// 		FakeNamespaceDeleter: NewFakeNamespaceDeleter(deleteErr),
+// 	}
+// }

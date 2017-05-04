@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/deis/k8s-claimer/gke"
+	"github.com/deis/k8s-claimer/providers/gke"
 	"github.com/deis/k8s-claimer/htp"
 	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
@@ -60,13 +60,13 @@ func DeleteLease(
 			htp.Error(w, http.StatusConflict, "Lease %s doesn't exist", leaseToken)
 			return
 		}
-		cluster, err := getClusterFromLease(lease, clusterLister, projID, zone)
+		cluster, err := gke.GetClusterFromLease(lease, clusterLister, projID, zone)
 		if err != nil {
 			log.Printf("Couldn't get cluster from lease -- %s", err)
 			htp.Error(w, http.StatusInternalServerError, "Couldn't get cluster from lease -- %s", err)
 			return
 		}
-		cfg, err := createKubeConfigFromCluster(cluster)
+		cfg, err := k8s.CreateKubeConfigFromCluster(cluster)
 		if err != nil {
 			log.Printf("Couldn't create kube config from cluster -- %s", err)
 			htp.Error(w, http.StatusInternalServerError, "Couldn't create kube config from cluster -- %s", err)
@@ -96,7 +96,7 @@ func DeleteLease(
 			}
 		}
 
-		if err := saveAnnotations(services, svc, leaseMap); err != nil {
+		if err := k8s.SaveAnnotations(services, svc, leaseMap); err != nil {
 			log.Printf("Error saving new annotations -- %s", err)
 			htp.Error(w, http.StatusInternalServerError, "Error saving new annotations -- %s", err)
 			return

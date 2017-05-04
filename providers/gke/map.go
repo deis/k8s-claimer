@@ -1,7 +1,6 @@
-package clusters
+package gke
 
 import (
-	"github.com/deis/k8s-claimer/gke"
 	container "google.golang.org/api/container/v1"
 )
 
@@ -20,7 +19,7 @@ func clusterNamesToMap(c []*container.Cluster) map[string]*container.Cluster {
 
 // ParseMapFromGKE calls the GKE API to get a list of clusters, then returns a Map representation
 // of those clusters. Returns nil and an appropriate error if any errors occurred along the way
-func ParseMapFromGKE(clusterLister gke.ClusterLister, projID, zone string) (*Map, error) {
+func ParseMapFromGKE(clusterLister ClusterLister, projID, zone string) (*Map, error) {
 	clustersResp, err := clusterLister.List(projID, zone)
 	if err != nil {
 		return nil, err

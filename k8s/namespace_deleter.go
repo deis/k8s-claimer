@@ -22,3 +22,8 @@ func (f *FakeNamespaceDeleter) Delete(name string, opts *v1.DeleteOptions) error
 	f.NsDeleted = append(f.NsDeleted, name)
 	return f.Err
 }
+
+// NewFakeNamespaceDeleter returns a new FakeNamespaceDeleter
+func NewFakeNamespaceDeleter(err error) *FakeNamespaceDeleter {
+	return &FakeNamespaceDeleter{Err: err}
+}
