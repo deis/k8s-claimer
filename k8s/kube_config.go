@@ -3,6 +3,7 @@ package k8s
 import (
 	"encoding/base64"
 	"fmt"
+	"log"
 	"strings"
 
 	container "google.golang.org/api/container/v1"
@@ -101,6 +102,17 @@ func MarshalAndEncodeKubeConfig(cfg *KubeConfig) (string, error) {
 		return "", err
 	}
 	return base64.StdEncoding.EncodeToString(y), nil
+}
+
+// CreateKubeConfig will take a yaml kubeconfig and return a parse KubeConfig object
+func CreateKubeConfig(k []byte) (*KubeConfig, error) {
+	kubeConfig := KubeConfig{}
+	err := yaml.Unmarshal(k, &kubeConfig)
+	if err != nil {
+		log.Printf("Error parsing yaml:%s\n", err)
+		return nil, err
+	}
+	return &kubeConfig, nil
 }
 
 // CreateKubeConfigFromCluster generates a valid KubeConfig object from a leased cluster

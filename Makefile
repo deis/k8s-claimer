@@ -25,7 +25,7 @@ glideup:
 	${DEV_ENV_CMD} glide up
 
 build-binary:
-	${DEV_ENV_PREFIX} -e CGO_ENABLED=0 ${DEV_ENV_IMAGE} go build -a -installsuffix cgo ${LDFLAGS} -o rootfs/bin/boot
+	${DEV_ENV_PREFIX} -e CGO_ENABLED=0 ${DEV_ENV_IMAGE} go build -a -installsuffix cgo ${LDFLAGS} -o rootfs/bin/server
 
 docker-build:
 	docker build ${DOCKER_BUILD_FLAGS} -t ${IMAGE} rootfs
@@ -62,4 +62,4 @@ upgrade:
 	helm upgrade k8s-claimer chart --namespace deis --set image.org=${IMAGE_PREFIX},image.tag=${VERSION},${ARGS}
 
 uninstall:
-	helm delete fluentd --purge
+	helm delete k8s-claimer --purge

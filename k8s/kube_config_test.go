@@ -149,3 +149,30 @@ func TestMarshalAndEncodeKubeConfig(t *testing.T) {
 	assert.Equal(t, decodedCfg.AuthInfos[0].AuthInfo.ClientCertificateData, cfg.AuthInfos[0].AuthInfo.ClientCertificateData,
 		"authInfo1_cert_data")
 }
+
+func TestCreateKubeConfig(t *testing.T) {
+	config := `
+---
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: "cert-authority-data"
+    server: https://my-cluster.fqdn
+  name: "cluster-name"
+contexts:
+- context:
+    cluster: "context-cluster"
+    user: "context-user"
+  name: "context-name"
+current-context: "current-context"
+kind: Config
+users:
+- name: "users"
+  user:
+    client-certificate-data: "client-cert-data"
+    client-key-data: "client-key-data"
+  `
+	kubeConfig, err := CreateKubeConfig([]byte(config))
+	assert.NoErr(t, err)
+	assert.Equal(t, kubeConfig.Clusters[0].Name, "cluster-name", "Cluster Name")
+}

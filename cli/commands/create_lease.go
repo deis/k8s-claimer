@@ -19,7 +19,7 @@ const (
 )
 
 // CreateLease is a cli.Command action for creating a lease
-func CreateLease(c *cli.Context) error {
+func CreateLease(c *cli.Context) {
 	// inspect env for auth env var
 	authToken := os.Getenv("AUTH_TOKEN")
 	if authToken == "" {
@@ -40,6 +40,10 @@ func CreateLease(c *cli.Context) error {
 	if cloudProvider == "" {
 		log.Fatal("Cloud Provider not provided")
 	}
+	if cloudProvider == "azure" && clusterVersion != "" {
+		log.Fatal("Finding clusters by version is currently not supported with Azure!")
+	}
+
 	kcfgFile := c.String("kubeconfig-file")
 	if len(kcfgFile) < 1 {
 		log.Fatal("Missing kubeconfig-file")
@@ -67,7 +71,6 @@ func CreateLease(c *cli.Context) error {
 	if _, err := io.Copy(fd, bytes.NewBuffer(kcfg)); err != nil {
 		log.Fatalf("Error writing new Kubeconfig file to %s: %s", kcfgFile, err)
 	}
-	return nil
 }
 
 func exportVar(prefix, envVarName, val string) string {

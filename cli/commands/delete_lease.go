@@ -10,7 +10,7 @@ import (
 )
 
 // DeleteLease is a cli.Command action for deleting a lease
-func DeleteLease(c *cli.Context) error {
+func DeleteLease(c *cli.Context) {
 	// inspect env for auth env var
 	authToken := os.Getenv("AUTH_TOKEN")
 	if authToken == "" {
@@ -34,6 +34,4 @@ func DeleteLease(c *cli.Context) error {
 	}
 
 	fmt.Println("Deleted lease", leaseToken)
-
-	return nil
 }

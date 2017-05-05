@@ -1,8 +1,6 @@
 package client
 
 import (
-	"bytes"
-	"encoding/json"
 	"net/http"
 
 	"github.com/deis/k8s-claimer/htp"
@@ -15,12 +13,7 @@ type DeleteLeaseReq struct {
 
 // DeleteLease deletes a lease
 func DeleteLease(server, authToken, cloudProvider, leaseToken string) error {
-	endpt := newEndpoint(htp.Delete, server, "lease/"+leaseToken)
-	reqBuf := new(bytes.Buffer)
-	req := DeleteLeaseReq{CloudProvider: cloudProvider}
-	if err := json.NewEncoder(reqBuf).Encode(req); err != nil {
-		return errEncoding{err: err}
-	}
+	endpt := newEndpoint(htp.Delete, server, "lease/"+cloudProvider+"/"+leaseToken)
 	resp, err := endpt.executeReq(getHTTPClient(), nil, authToken)
 	if err != nil {
 		return errHTTPRequest{endpoint: endpt.String(), err: err}

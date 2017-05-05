@@ -56,7 +56,7 @@ const (
 )
 
 func TestFindUnusedGKEClusterByName(t *testing.T) {
-	leaseableClusters := testutil.GetClusters()
+	leaseableClusters := testutil.GetGKEClusters()
 
 	// test when all clusters are leased
 	fakeLister := &FakeClusterLister{
@@ -74,7 +74,7 @@ func TestFindUnusedGKEClusterByName(t *testing.T) {
 }
 
 func TestFindUnusedGKEClusterByVersion(t *testing.T) {
-	leaseableClusters := testutil.GetClusters()
+	leaseableClusters := testutil.GetGKEClusters()
 
 	// test when all clusters are leased
 	fakeLister := &FakeClusterLister{
@@ -93,7 +93,7 @@ func TestFindUnusedGKEClusterByVersion(t *testing.T) {
 }
 
 func TestFindRandomUnusedGKECluster(t *testing.T) {
-	leaseableClusters := testutil.GetClusters()
+	leaseableClusters := testutil.GetGKEClusters()
 
 	// test when all clusters are leased
 	fakeLister := &FakeClusterLister{

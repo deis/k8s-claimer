@@ -226,3 +226,7 @@ This response code is returned when no lease exists with the given token.
 #### `200 OK`
 
 The lease was successfully deleted. The given token is no longer valid and should not be reused.
+
+
+## Azure Notes:
+* https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal

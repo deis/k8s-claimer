@@ -1,16 +1,14 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
 
-	"github.com/deis/k8s-claimer/config"
 	"github.com/deis/k8s-claimer/handlers"
 	"github.com/deis/k8s-claimer/htp"
 	"github.com/deis/k8s-claimer/k8s"
+	"github.com/deis/k8s-claimer/providers/azure"
 	"github.com/deis/k8s-claimer/providers/gke"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -59,21 +57,22 @@ func main() {
 		log.Fatalf("Error getting server config (%s)", err)
 	}
 	serverConf.Print()
-	gCloudConf, err := parseGoogleConfig(appName)
+	googleConfig, err := parseGoogleConfig(appName)
 	if err != nil {
-		log.Fatalf("Error getting google cloud config (%s) -- %+v", err, gCloudConf)
+		log.Fatalf("Error getting google cloud config (%s) -- %+v", err, googleConfig)
 	}
-	gCloudConfFile := new(config.GoogleCloudAccountFile)
-	if err := json.NewDecoder(bytes.NewBuffer([]byte(gCloudConf.AccountFile))).Decode(gCloudConfFile); err != nil {
-		log.Fatalf("Error parsing google cloud config (%s)\n %+v", err, gCloudConf.AccountFile)
+
+	azureConfig, err := parseAzureConfig(appName)
+	if err != nil {
+		log.Fatalf("Error getting azure config (%s) -- %+v", err, azureConfig)
 	}
-	containerService, err := gke.GetContainerService(
-		gCloudConfFile.ClientEmail,
-		gke.PrivateKey(gCloudConfFile.PrivateKey),
-	)
+
+	containerService, err := gke.GetContainerService(googleConfig.AccountFile.ClientEmail, gke.PrivateKey(googleConfig.AccountFile.PrivateKey))
 	if err != nil {
 		log.Fatalf("Error creating GKE client (%s)", err)
 	}
+	gkeClusterLister := gke.NewGKEClusterLister(containerService)
+	azureClusterLister := azure.NewAzureClusterLister(azureConfig)
 
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -85,21 +84,22 @@ func main() {
 	}
 
 	services := k8sClient.Services(serverConf.Namespace)
-	gkeClusterLister := gke.NewGKEClusterLister(containerService)
 	mux := http.NewServeMux()
 	createLeaseHandler := handlers.CreateLease(
-		gkeClusterLister,
 		services,
 		serverConf.ServiceName,
-		gCloudConf.ProjectID,
-		gCloudConf.Zone,
+		gkeClusterLister,
+		azureClusterLister,
+		azureConfig,
+		googleConfig,
 	)
 	deleteLeaseHandler := handlers.DeleteLease(
 		services,
-		gkeClusterLister,
 		serverConf.ServiceName,
-		gCloudConf.ProjectID,
-		gCloudConf.Zone,
+		gkeClusterLister,
+		azureClusterLister,
+		azureConfig,
+		googleConfig,
 		serverConf.ClearNamespaces,
 		kubeNamespacesFromConfig(),
 	)

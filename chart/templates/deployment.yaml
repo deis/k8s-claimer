@@ -21,10 +21,17 @@ spec:
       labels:
         app: k8s-claimer
     spec:
+      volumes:
+      - name: ssh-key
+        secret:
+          secretName: ssh-key
       containers:
       - name: k8s-claimer
         image: quay.io/{{.Values.image.org}}/k8s-claimer:{{.Values.image.tag}}
         imagePullPolicy: {{.Values.image.pull_policy}}
+        volumeMounts:
+        - name: ssh-key
+          mountPath: /root/.ssh
         env:
         - name: "BIND_PORT"
           value: "{{.Values.config.bind_port}}"
@@ -52,6 +59,16 @@ spec:
           value: "{{ .Values.config.google.zone }}"
         {{- end }}
         {{- end }}
+        {{- if .Values.config.azure.subscription_id }}
+        - name: "AZURE_CLIENT_ID"
+          value: "{{ .Values.config.azure.client_id }}"
+        - name: "AZURE_CLIENT_SECRET"
+          value: "{{ .Values.config.azure.client_secret }}"
+        - name: "AZURE_TENANT_ID"
+          value: "{{ .Values.config.azure.tenant_id }}"
+        - name: "AZURE_SUBSCRIPTION_ID"
+          value: "{{ .Values.config.azure.subscription_id }}"
+        {{- end}}
         ports:
         - containerPort: {{.Values.config.bind_port}}
           name: http

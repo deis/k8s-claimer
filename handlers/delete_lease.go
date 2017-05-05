@@ -4,10 +4,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/deis/k8s-claimer/providers/gke"
+	"github.com/deis/k8s-claimer/config"
 	"github.com/deis/k8s-claimer/htp"
 	"github.com/deis/k8s-claimer/k8s"
 	"github.com/deis/k8s-claimer/leases"
+	"github.com/deis/k8s-claimer/providers/azure"
+	"github.com/deis/k8s-claimer/providers/gke"
 	"github.com/pborman/uuid"
 )
 
@@ -19,23 +21,24 @@ var (
 )
 
 // DeleteLease returns the http handler for the DELETE /lease/{token} endpoint
-func DeleteLease(
-	services k8s.ServiceGetterUpdater,
-	clusterLister gke.ClusterLister,
+func DeleteLease(services k8s.ServiceGetterUpdater,
 	k8sServiceName string,
-	projID,
-	zone string,
+	gkeClusterLister gke.ClusterLister,
+	azureClusterLister azure.ClusterLister,
+	azureConfig *config.Azure,
+	googleConfig *config.Google,
 	clearNamespaces bool,
-	nsFunc func(*k8s.KubeConfig) (k8s.NamespaceListerDeleter, error),
-) http.Handler {
+	nsFunc func(*k8s.KubeConfig) (k8s.NamespaceListerDeleter, error)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pathElts := htp.SplitPath(r)
-		if len(pathElts) != 2 {
-			log.Println("Path must be in the format /lease/{token}")
+		if len(pathElts) != 3 {
+			log.Println("Path must be in the format /lease/{provider}/{token}")
 			htp.Error(w, http.StatusBadRequest, "Path must be in the format /lease/{token}")
 			return
 		}
-		leaseToken := uuid.Parse(pathElts[1])
+
+		provider := pathElts[1]
+		leaseToken := uuid.Parse(pathElts[2])
 		if leaseToken == nil {
 			log.Printf("Lease token %s is invalid", pathElts[1])
 			htp.Error(w, http.StatusBadRequest, "Lease token %s is invalid", pathElts[1])
@@ -60,18 +63,42 @@ func DeleteLease(
 			htp.Error(w, http.StatusConflict, "Lease %s doesn't exist", leaseToken)
 			return
 		}
-		cluster, err := gke.GetClusterFromLease(lease, clusterLister, projID, zone)
-		if err != nil {
-			log.Printf("Couldn't get cluster from lease -- %s", err)
-			htp.Error(w, http.StatusInternalServerError, "Couldn't get cluster from lease -- %s", err)
+
+		var cfg *k8s.KubeConfig
+		switch provider {
+		case "google":
+			cluster, err := gke.GetClusterFromLease(lease, gkeClusterLister, googleConfig.ProjectID, googleConfig.Zone)
+			if err != nil {
+				log.Printf("Couldn't get cluster from lease -- %s for google provider", err)
+				htp.Error(w, http.StatusInternalServerError, "Couldn't get cluster from lease -- %s", err)
+				return
+			}
+			cfg, err = k8s.CreateKubeConfigFromCluster(cluster)
+			if err != nil {
+				log.Printf("Couldn't create kube config from cluster -- %s", err)
+				htp.Error(w, http.StatusInternalServerError, "Couldn't create kube config from cluster -- %s", err)
+				return
+			}
+		case "azure":
+			cluster, err := azure.GetClusterFromLease(lease, azureClusterLister)
+			if err != nil {
+				log.Printf("Couldn't get cluster from lease -- %s for azure provider", err)
+				htp.Error(w, http.StatusInternalServerError, "Couldn't get cluster from lease -- %s", err)
+				return
+			}
+			log.Printf("Cluster when deleting:%+v\n", cluster)
+			cfg, err = azure.FetchKubeConfig(*cluster.MasterProfile.Fqdn)
+			if err != nil {
+				log.Printf("Couldn't create kube config from cluster -- %s", err)
+				htp.Error(w, http.StatusInternalServerError, "Couldn't create kube config from cluster -- %s", err)
+				return
+			}
+		default:
+			log.Printf("Unable to find suitable provider for this request -- Provider:%s", provider)
+			htp.Error(w, http.StatusBadRequest, "Unable to find suitable provider for this request -- Provider:%s", provider)
 			return
 		}
-		cfg, err := k8s.CreateKubeConfigFromCluster(cluster)
-		if err != nil {
-			log.Printf("Couldn't create kube config from cluster -- %s", err)
-			htp.Error(w, http.StatusInternalServerError, "Couldn't create kube config from cluster -- %s", err)
-			return
-		}
+		// TODO: Fork here for Azure
 
 		// blow away the lease, regardless of whether it's expired or not. the create endpoint deletes
 		// the lease from annotations, replacing the lease for a cluster with a new UUID anyway

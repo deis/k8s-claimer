@@ -1,15 +1,33 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+
 	"github.com/deis/k8s-claimer/config"
 	"github.com/kelseyhightower/envconfig"
 )
 
-func parseGoogleConfig(appName string) (*config.GoogleCloud, error) {
-	conf := new(config.GoogleCloud)
+func parseAzureConfig(appName string) (*config.Azure, error) {
+	conf := new(config.Azure)
 	if err := envconfig.Process(appName, conf); err != nil {
 		return nil, err
 	}
+	return conf, nil
+}
+
+func parseGoogleConfig(appName string) (*config.Google, error) {
+	conf := new(config.Google)
+	if err := envconfig.Process(appName, conf); err != nil {
+		return nil, err
+	}
+
+	gCloudConfFile := new(config.AccountFile)
+	if err := json.NewDecoder(bytes.NewBuffer([]byte(conf.AccountFileJSON))).Decode(gCloudConfFile); err != nil {
+		// log.Fatalf("Error parsing google cloud config (%s)\n %+v", err, gCloudConf.AccountFile)
+		return nil, err
+	}
+	conf.AccountFile = *gCloudConfFile
 	return conf, nil
 }
 
@@ -20,4 +38,3 @@ func parseServerConfig(appName string) (*config.Server, error) {
 	}
 	return conf, nil
 }
-
