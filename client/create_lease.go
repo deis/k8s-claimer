@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/deis/k8s-claimer/api"
@@ -24,7 +25,11 @@ func CreateLease(server, authToken, cloudProvider, clusterVersion, clusterRegex 
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		bodyBytes, _ := ioutil.ReadAll(res.Body)
+		bodyBytes, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			log.Printf("Unable to read body of response:%s\n", err)
+			return nil, err
+		}
 		message := string(bodyBytes)
 		return nil, APIError{endpoint: endpt.String(), code: res.StatusCode, message: message}
 	}

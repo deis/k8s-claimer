@@ -42,3 +42,8 @@ func AccountInfo(fileBase64 string) (*AccountFile, error) {
 	}
 	return ret, nil
 }
+
+//ValidConfig will return true if there are values set for each Property of the Google config object
+func (g *Google) ValidConfig() bool {
+	return g.AccountFileJSON != "" && g.ProjectID != "" && g.Zone != ""
+}

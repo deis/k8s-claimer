@@ -24,7 +24,6 @@ func parseGoogleConfig(appName string) (*config.Google, error) {
 
 	gCloudConfFile := new(config.AccountFile)
 	if err := json.NewDecoder(bytes.NewBuffer([]byte(conf.AccountFileJSON))).Decode(gCloudConfFile); err != nil {
-		// log.Fatalf("Error parsing google cloud config (%s)\n %+v", err, gCloudConf.AccountFile)
 		return nil, err
 	}
 	conf.AccountFile = *gCloudConfFile

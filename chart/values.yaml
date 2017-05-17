@@ -12,7 +12,7 @@ config:
 
   google:
     # zone: Zone you would like to lease clusters from. Defaults to all zones (-).
-    # account_file The JWT for the account that is not base64 encoded (we will do that for you)
+    # account_file: The JWT for the account that is not base64 encoded (we will do that for you)
     # project_id: Project ID to lease clusters from
 
   azure:
@@ -20,3 +20,4 @@ config:
     # client_secret: The password of the service principle
     # tenant_id: 
     # subscription_id: The subscription id your clusters reside in
+    

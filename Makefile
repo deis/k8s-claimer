@@ -44,11 +44,7 @@ deploy:
 
 build-cli-cross:
 	${DEV_ENV_CMD} gox -verbose ${LDFLAGS} -os="linux darwin " -arch="amd64 386" -output="${DIST_DIR}/${BINARY_NAME}-latest-{{.OS}}-{{.Arch}}" ./cli
-ifdef TRAVIS_TAG
-	${DEV_ENV_CMD} gox -verbose ${LDFLAGS} -os="linux darwin" -arch="amd64 386" -output="${DIST_DIR}/${TRAVIS_TAG}/${BINARY_NAME}-${TRAVIS_TAG}-{{.OS}}-{{.Arch}}" ./cli
-else
 	${DEV_ENV_CMD} gox -verbose ${LDFLAGS} -os="linux darwin" -arch="amd64 386" -output="${DIST_DIR}/${VERSION}/${BINARY_NAME}-${VERSION}-{{.OS}}-{{.Arch}}" ./cli
-endif
 
 build-cli:
 	go build ${LDFLAGS} -o k8s-claimer-cli ./cli

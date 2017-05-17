@@ -66,7 +66,7 @@ The Kubeconfig file will be written to kubeconfig-file
 						cli.StringFlag{
 							Name:  "provider",
 							Value: "",
-							Usage: "Which cloud provider to use when creating a cluster lease",
+							Usage: "Which cloud provider to use when creating a cluster lease. Acceptable values are azure and google. If a value is not provided it will return an error.",
 						},
 					},
 				},
@@ -81,7 +81,7 @@ k8s-claimer-cli lease delete $TOKEN
 						cli.StringFlag{
 							Name:  "provider",
 							Value: "",
-							Usage: "Which cloud provider to use when deleting a cluster lease",
+							Usage: "Which cloud provider to use when deleting a cluster lease. Acceptable values are azure and google. If a value is not provided it will return an error.",
 						},
 					},
 				},

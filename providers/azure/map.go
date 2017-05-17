@@ -6,7 +6,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/arm/containerservice"
 )
 
-// Map is a map from cluster name to GKE cluster
+// Map is a map from cluster name to ACS cluster
 type Map struct {
 	nameMap map[string]*containerservice.ContainerService
 }

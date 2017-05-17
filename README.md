@@ -108,7 +108,7 @@ OPTIONS:
    --kubeconfig-file value  The location of the resulting Kubeconfig file (default: "./kubeconfig.yaml")
    --cluster-regex value    A regular expression that will be used to match which cluster you lease
    --cluster-version value  A version string that will be used to find a cluster to lease
-   --provider value         Which cloud provider to use when creating a cluster lease
+   --provider value         Which cloud provider to use when creating a cluster lease. Acceptable values are azure and google. If a value is not provided it will return an error.
 ```
 
 Example
@@ -133,7 +133,7 @@ USAGE:
    k8s-claimer lease delete [command options] [arguments...]
 
 OPTIONS:
-   --provider value  Which cloud provider to use when deleting a cluster lease
+   --provider value  Which cloud provider to use when deleting a cluster lease. Acceptable values are azure and google. If a value is not provided it will return an error.
 ```
 
 Example

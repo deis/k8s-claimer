@@ -21,7 +21,7 @@ func NewAzureClusterLister(azureConfig *config.Azure) *AzureClusterLister {
 
 // List is the ClusterLister interface implementation
 func (a *AzureClusterLister) List() (*containerservice.ListResult, error) {
-	bearerAuthorizer, err := NewBearerAuthorizer(a.Config.ToMap(), azure.PublicCloud.ResourceManagerEndpoint)
+	bearerAuthorizer, err := NewBearerAuthorizer(a.Config, azure.PublicCloud.ResourceManagerEndpoint)
 	if err != nil {
 		log.Printf("Error trying to create Bearer Authorizer: %s", err)
 		return nil, err

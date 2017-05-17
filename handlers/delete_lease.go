@@ -67,38 +67,47 @@ func DeleteLease(services k8s.ServiceGetterUpdater,
 		var cfg *k8s.KubeConfig
 		switch provider {
 		case "google":
-			cluster, err := gke.GetClusterFromLease(lease, gkeClusterLister, googleConfig.ProjectID, googleConfig.Zone)
-			if err != nil {
-				log.Printf("Couldn't get cluster from lease -- %s for google provider", err)
-				htp.Error(w, http.StatusInternalServerError, "Couldn't get cluster from lease -- %s", err)
-				return
-			}
-			cfg, err = k8s.CreateKubeConfigFromCluster(cluster)
-			if err != nil {
-				log.Printf("Couldn't create kube config from cluster -- %s", err)
-				htp.Error(w, http.StatusInternalServerError, "Couldn't create kube config from cluster -- %s", err)
-				return
+			if googleConfig.ValidConfig() {
+				cluster, err := gke.GetClusterFromLease(lease, gkeClusterLister, googleConfig.ProjectID, googleConfig.Zone)
+				if err != nil {
+					log.Printf("Couldn't get cluster from lease -- %s for google provider", err)
+					htp.Error(w, http.StatusInternalServerError, "Couldn't get cluster from lease -- %s", err)
+					return
+				}
+				cfg, err = k8s.CreateKubeConfigFromCluster(cluster)
+				if err != nil {
+					log.Printf("Couldn't create kube config from cluster -- %s", err)
+					htp.Error(w, http.StatusInternalServerError, "Couldn't create kube config from cluster -- %s", err)
+					return
+				}
+			} else {
+				log.Println("Unable to satisfy this request because the Google provider is not properly configured.")
+				htp.Error(w, http.StatusInternalServerError, "Unable to satisfy this request because the Google provider is not properly configured.")
 			}
 		case "azure":
-			cluster, err := azure.GetClusterFromLease(lease, azureClusterLister)
-			if err != nil {
-				log.Printf("Couldn't get cluster from lease -- %s for azure provider", err)
-				htp.Error(w, http.StatusInternalServerError, "Couldn't get cluster from lease -- %s", err)
-				return
-			}
-			log.Printf("Cluster when deleting:%+v\n", cluster)
-			cfg, err = azure.FetchKubeConfig(*cluster.MasterProfile.Fqdn)
-			if err != nil {
-				log.Printf("Couldn't create kube config from cluster -- %s", err)
-				htp.Error(w, http.StatusInternalServerError, "Couldn't create kube config from cluster -- %s", err)
-				return
+			if azureConfig.ValidConfig() {
+				cluster, err := azure.GetClusterFromLease(lease, azureClusterLister)
+				if err != nil {
+					log.Printf("Couldn't get cluster from lease -- %s for azure provider", err)
+					htp.Error(w, http.StatusInternalServerError, "Couldn't get cluster from lease -- %s", err)
+					return
+				}
+				log.Printf("Cluster when deleting:%+v\n", cluster)
+				cfg, err = azure.FetchKubeConfig(*cluster.MasterProfile.Fqdn)
+				if err != nil {
+					log.Printf("Couldn't create kube config from cluster -- %s", err)
+					htp.Error(w, http.StatusInternalServerError, "Couldn't create kube config from cluster -- %s", err)
+					return
+				}
+			} else {
+				log.Println("Unable to satisfy this request because the Azure provider is not properly configured.")
+				htp.Error(w, http.StatusInternalServerError, "Unable to satisfy this request because the Azure provider is not properly configured.")
 			}
 		default:
 			log.Printf("Unable to find suitable provider for this request -- Provider:%s", provider)
 			htp.Error(w, http.StatusBadRequest, "Unable to find suitable provider for this request -- Provider:%s", provider)
 			return
 		}
-		// TODO: Fork here for Azure
 
 		// blow away the lease, regardless of whether it's expired or not. the create endpoint deletes
 		// the lease from annotations, replacing the lease for a cluster with a new UUID anyway

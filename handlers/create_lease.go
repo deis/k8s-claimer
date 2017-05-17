@@ -32,9 +32,19 @@ func CreateLease(
 
 		switch req.CloudProvider {
 		case "google":
-			gke.Lease(w, req, gkeClusterLister, services, k8sServiceName, googleConfig.ProjectID, googleConfig.Zone)
+			if googleConfig.ValidConfig() {
+				gke.Lease(w, req, gkeClusterLister, services, k8sServiceName, googleConfig.ProjectID, googleConfig.Zone)
+			} else {
+				log.Println("Unable to satisfy this request because the Google provider is not properly configured.")
+				htp.Error(w, http.StatusInternalServerError, "Unable to satisfy this request because the Google provider is not properly configured.")
+			}
 		case "azure":
-			azure.Lease(w, req, azureClusterLister, services, azureConfig, k8sServiceName)
+			if azureConfig.ValidConfig() {
+				azure.Lease(w, req, azureClusterLister, services, azureConfig, k8sServiceName)
+			} else {
+				log.Println("Unable to satisfy this request because the Azure provider is not properly configured.")
+				htp.Error(w, http.StatusInternalServerError, "Unable to satisfy this request because the Azure provider is not properly configured.")
+			}
 		default:
 			log.Printf("Unable to find suitable provider for this request -- Provider:%s", req.CloudProvider)
 			htp.Error(w, http.StatusBadRequest, "Unable to find suitable provider for this request -- Provider:%s", req.CloudProvider)

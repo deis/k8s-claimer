@@ -9,8 +9,6 @@ import (
 	"os/exec"
 	"time"
 
-	"golang.org/x/crypto/ssh"
-
 	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/deis/k8s-claimer/config"
@@ -153,22 +151,13 @@ func getSvcsAndClusters(clusterLister ClusterLister, services k8s.ServiceGetterU
 	}
 }
 
-func publicKeyFile(file string) ssh.AuthMethod {
-	buffer, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil
-	}
-
-	key, err := ssh.ParsePrivateKey(buffer)
-	if err != nil {
-		return nil
-	}
-	return ssh.PublicKeys(key)
-}
-
 // FetchKubeConfig will scp the kubeconfig file from the master server into /tmp/kubeconfig<tempfile>
 func FetchKubeConfig(server string) (*k8s.KubeConfig, error) {
-	f, _ := ioutil.TempFile("", "kubeconfig")
+	f, err := ioutil.TempFile("", "kubeconfig")
+	if err != nil {
+		log.Printf("Error while trying to create temp file for kubeconfig:%s\n", err)
+		return nil, err
+	}
 	conn := fmt.Sprintf("azureuser@%s:.kube/config", server)
 	cmd := exec.Command("scp", "-oStrictHostKeyChecking=no", conn, f.Name())
 	err := cmd.Start()

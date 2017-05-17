@@ -8,11 +8,7 @@ type Azure struct {
 	SubscriptionID string `envconfig:"AZURE_SUBSCRIPTION_ID"`
 }
 
-// ToMap returns an azure config object as a map[string]string
-func (a Azure) ToMap() map[string]string {
-	return map[string]string{
-		"AZURE_CLIENT_ID":       a.ClientID,
-		"AZURE_CLIENT_SECRET":   a.ClientSecret,
-		"AZURE_SUBSCRIPTION_ID": a.SubscriptionID,
-		"AZURE_TENANT_ID":       a.TenantID}
+//ValidConfig will return true if there are values set for each Property of the Azure config object
+func (a *Azure) ValidConfig() bool {
+	return a.SubscriptionID != "" && a.ClientID != "" && a.ClientSecret != "" && a.TenantID != ""
 }
