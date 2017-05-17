@@ -34,27 +34,34 @@ specifies the lease duration when they acquire it.
 For implementation details, see [the architecture document](doc/architecture.md)
 
 # Configuration
-
 This server is configured exclusively with environment variables. See below for a list and
 description of each.
 
-- `GOOGLE_CLOUD_ACCOUNT_FILE_BASE64` - A base64-encoded version of the JWT. Ensure that this is encoded with a [RFC 4648](http://tools.ietf.org/html/rfc4648) compatible parser. If you're using Go, use [`StdEncoding`](https://godoc.org/encoding/base64#pkg-variables) in the `encoding/base64`
-package. This is a required field. You can get a JWT file from the Google Cloud Platform console by following these steps:
+| ENV Var | Description |
+|---------|-------------|
+| BIND_PORT | The port to bind the server to. Defaults to `8080` |
+| BIND_HOST | The host to bind the server to. Defaults to `0.0.0.0`
+| NAMESPACE | The namespace in which to store lease data (lease data is stored on annotations on a service in this namespace). Defaults to `k8s-claimer` | 
+| SERVICE_NAME | The service on which to store lease data. Defaults to `k8s-claimer` |
+| AUTH_TOKEN | The authentication token that clients must use to acquire and release leases |
+| GOOGLE_CLOUD_ACCOUNT_FILE | Base64 encoded JWT of the Service Account for GKE | 
+| GOOGLE_CLOUD_PROJECT_ID | The Google Cloud project ID for the project that holds the GKE clusters to lease. This is a required field |
+| GOOGLE_CLOUD_ZONE | The zone that clusters can be leased from. Pass `-` to indicate all zones. Defaults to `-` | 
+| AZURE_CLIENT_ID | The Service Principal ID used to make Azure API calls |
+| AZURE_CLIENT_SECRET | The secret for the Service Principal | 
+| AZURE_TENANT_ID | The tenant of the Service Principal | 
+| AZURE_SUBSCRIPTION_ID | The subscription where the leasable clusters live |
+
+
+## GOOGLE_CLOUD_ACCOUNT_FILE
+You can get a JWT file from the Google Cloud Platform console by following these steps:
   - Go to `Permissions`
   - Create a service account if necessary
   - Click on the three vertical dots to the far right of the service account row for which you would like permissions
   - Click `Create key`
   - Make sure `JSON` is checked and click `Create`
-- `GOOGLE_CLOUD_PROJECT_ID` - The Google Cloud project ID for the project that holds the GKE clusters to lease. This is a required field
-- `GOOGLE_CLOUD_ZONE` - The zone that clusters can be leased from. Pass `-` to indicate all zones. Defaults to `-`
-- `BIND_HOST` - The host to bind the server to. Defaults to `0.0.0.0`
-- `BIND_PORT` - The port to bind the server to. Defaults to `8080`
-- `NAMESPACE` - The namespace in which to store lease data (lease data is stored on annotations on a service in this namespace). Defaults to `k8s-claimer`
-- `SERVICE_NAME` - The service on which to store lease data. Defaults to `k8s-claimer`
-- `AUTH_TOKEN` - The authentication token that clients must use to acquire and release leases
 
 # CLI
-
 A command line interface is provided which talks to the REST API server. You can download the binaries
 using the links above, or build it yourself by executing `make bootstrap build-cli`.
 
