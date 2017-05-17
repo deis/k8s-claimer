@@ -56,10 +56,10 @@ build-cli:
 dist: build-cli-cross
 
 install:
-	helm upgrade k8s-claimer chart --install --namespace deis --set image.org=${IMAGE_PREFIX},image.tag=${VERSION},${ARGS}
+	helm upgrade k8s-claimer chart --install --namespace k8sclaimer --set image.org=${IMAGE_PREFIX},image.tag=${VERSION},${ARGS}
 
 upgrade:
-	helm upgrade k8s-claimer chart --namespace deis --set image.org=${IMAGE_PREFIX},image.tag=${VERSION},${ARGS}
+	helm upgrade k8s-claimer chart --namespace k8sclaimer --set image.org=${IMAGE_PREFIX},image.tag=${VERSION},${ARGS}
 
 uninstall:
 	helm delete k8s-claimer --purge
