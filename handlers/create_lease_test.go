@@ -57,7 +57,7 @@ func TestCreateLeaseValidResp(t *testing.T) {
 	services := k8s.NewFakeServiceGetterUpdater(&v1.Service{
 		ObjectMeta: v1.ObjectMeta{Name: "service1"},
 	}, nil, nil, nil)
-	googleConfig := &config.Google{ProjectID: "proj1", Zone: "zone1"}
+	googleConfig := &config.Google{AccountFileJSON: "test", ProjectID: "proj1", Zone: "zone1"}
 	hdl := CreateLease(services, "", gkeClusterLister, nil, nil, googleConfig)
 	reqBody := `{"max_time":30, "cloud_provider": "google"}`
 	req, err := http.NewRequest("POST", "/lease", strings.NewReader(reqBody))

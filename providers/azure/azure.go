@@ -160,7 +160,7 @@ func FetchKubeConfig(server string) (*k8s.KubeConfig, error) {
 	}
 	conn := fmt.Sprintf("azureuser@%s:.kube/config", server)
 	cmd := exec.Command("scp", "-oStrictHostKeyChecking=no", conn, f.Name())
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		log.Printf("Error while trying to start SCP:%s\n", err)
 		return nil, err

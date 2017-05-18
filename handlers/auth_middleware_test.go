@@ -30,7 +30,7 @@ func TestWithAuthValidToken(t *testing.T) {
 	services := k8s.NewFakeServiceGetterUpdater(&v1.Service{
 		ObjectMeta: v1.ObjectMeta{Name: "service1"},
 	}, nil, nil, nil)
-	googleConfig := &config.Google{ProjectID: "proj1", Zone: "zone1"}
+	googleConfig := &config.Google{AccountFileJSON: "test", ProjectID: "proj1", Zone: "zone1"}
 	hdl := CreateLease(services, "", gkeClusterLister, nil, nil, googleConfig)
 	createLeaseHandler := htp.MethodMux(map[htp.Method]http.Handler{htp.Post: hdl})
 
@@ -46,7 +46,8 @@ func TestWithAuthValidToken(t *testing.T) {
 }
 
 func TestWithAuthInvalidToken(t *testing.T) {
-	hdl := CreateLease(nil, "", nil, nil, nil, nil)
+	googleConfig := &config.Google{AccountFileJSON: "test", ProjectID: "proj1", Zone: "zone1"}
+	hdl := CreateLease(nil, "", nil, nil, nil, googleConfig)
 	createLeaseHandler := htp.MethodMux(map[htp.Method]http.Handler{htp.Post: hdl})
 
 	mux := http.NewServeMux()
