@@ -1,7 +1,9 @@
 package gke
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -103,22 +105,23 @@ func getSvcsAndClusters(
 ) (*Map, *v1.Service, error) {
 
 	errCh := make(chan error)
-	doneCh := make(chan struct{})
 	clusterMapCh := make(chan *Map)
 	apiServiceCh := make(chan *v1.Service)
-	defer close(doneCh)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	go func() {
 		svc, err := services.Get(k8sServiceName)
 		if err != nil {
 			select {
 			case errCh <- err:
-			case <-doneCh:
 			}
 			return
 		}
 		select {
 		case apiServiceCh <- svc:
-		case <-doneCh:
+		case <-ctx.Done():
+			errCh <- fmt.Errorf("Timeout exceeded while trying to fetch services from Kubernetes API")
 		}
 	}()
 	go func() {
@@ -126,13 +129,13 @@ func getSvcsAndClusters(
 		if err != nil {
 			select {
 			case errCh <- err:
-			case <-doneCh:
+			case <-ctx.Done():
+				errCh <- fmt.Errorf("Timeout exceeded while trying to fetch clusters from Google API")
 			}
 			return
 		}
 		select {
 		case clusterMapCh <- clusterMap:
-		case <-doneCh:
 		}
 	}()
 

@@ -1,6 +1,7 @@
 package azure
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -101,22 +102,23 @@ func Lease(w http.ResponseWriter,
 func getSvcsAndClusters(clusterLister ClusterLister, services k8s.ServiceGetterUpdater, k8sServiceName string) (*Map, *v1.Service, error) {
 
 	errCh := make(chan error)
-	doneCh := make(chan struct{})
 	clusterMapCh := make(chan *Map)
 	apiServiceCh := make(chan *v1.Service)
-	defer close(doneCh)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	go func() {
 		svc, err := services.Get(k8sServiceName)
 		if err != nil {
 			select {
 			case errCh <- err:
-			case <-doneCh:
 			}
 			return
 		}
 		select {
 		case apiServiceCh <- svc:
-		case <-doneCh:
+		case <-ctx.Done():
+			errCh <- fmt.Errorf("Timeout exceeded while trying to fetch services from Kubernetes API")
 		}
 	}()
 	go func() {
@@ -124,13 +126,13 @@ func getSvcsAndClusters(clusterLister ClusterLister, services k8s.ServiceGetterU
 		if err != nil {
 			select {
 			case errCh <- err:
-			case <-doneCh:
 			}
 			return
 		}
 		select {
 		case clusterMapCh <- clusterMap:
-		case <-doneCh:
+		case <-ctx.Done():
+			errCh <- fmt.Errorf("Timeout exceeded while trying to fetch clusters from Azure API")
 		}
 	}()
 
