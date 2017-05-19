@@ -1,5 +1,5 @@
-hash: d6cd61b1e01bb2b751456e2207bcfc2aea5230345975167788d3b6b11b333a38
-updated: 2017-05-12T15:31:59.556750054-04:00
+hash: 5556fb84059a707d5c43e3624797a781698510a5bef4e41604eb8404711809be
+updated: 2017-05-19T16:08:54.255448881-04:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -10,7 +10,7 @@ imports:
 - name: github.com/arschles/assert
   version: bb58b908265b5931732079df03f2818bf2167ba0
 - name: github.com/Azure/azure-sdk-for-go
-  version: 5841475edc7c8725d79885d635aa8956f97fdf0e
+  version: 26132835cbefa2669a306b777f34b929b56aa0a2
   subpackages:
   - arm/containerservice
 - name: github.com/Azure/go-autorest
@@ -101,8 +101,6 @@ imports:
   version: 5bd2802263f21d8788851d5305584c82a5c75d7e
 - name: github.com/spf13/pflag
   version: 5ccb023bc27df288a957c5e994cd44fd19619465
-- name: github.com/tmc/scp
-  version: 8734282bd23b160cc07954a157106fe59e0f3993
 - name: github.com/ugorji/go
   version: f1f1a805ed361a0e078bb537e4ea78cd37dcf065
   subpackages:
@@ -110,7 +108,6 @@ imports:
 - name: golang.org/x/crypto
   version: 1f22c0103821b9390939b6776727195525381532
   subpackages:
-  - curve25519
   - ssh
 - name: golang.org/x/net
   version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
