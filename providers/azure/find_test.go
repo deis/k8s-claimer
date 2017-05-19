@@ -71,25 +71,6 @@ func TestFindUnusedAzureClusterByName(t *testing.T) {
 	assert.Equal(t, *unusedCluster.Name, "getClusterByName", "free cluster name")
 }
 
-// func TestFindUnusedAzureClusterByVersion(t *testing.T) {
-// 	leaseableClusters := testutil.GetAzureClusters()
-
-// 	// test when all clusters are leased
-// 	fakeLister := &FakeClusterLister{
-// 		Resp: &containerservice.ListResult{Value: leaseableClusters},
-// 		Err:  nil,
-// 	}
-
-// 	clusterMap, err := ParseMapFromAzure(fakeLister, azureConfig)
-// 	assert.NoErr(t, err)
-// 	leaseMap, err := leases.ParseMapFromAnnotations(nil)
-
-// 	unusedCluster, err := findUnusedCluster(clusterMap, leaseMap, "", "1.1.1")
-// 	assert.NoErr(t, err)
-// 	assert.Equal(t, unusedCluster.Name, "getClusterByVersion", "free cluster name")
-// 	assert.Equal(t, unusedCluster.CurrentNodeVersion, "1.1.1", "free cluster version")
-// }
-
 func TestFindRandomUnusedAzureCluster(t *testing.T) {
 	leaseableClusters := testutil.GetAzureClusters()
 
