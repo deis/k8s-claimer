@@ -59,3 +59,4 @@ upgrade:
 
 uninstall:
 	helm delete k8s-claimer --purge
+	

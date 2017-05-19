@@ -33,6 +33,15 @@ specifies the lease duration when they acquire it.
 
 For implementation details, see [the architecture document](doc/architecture.md)
 
+## Azure:
+* You need to create an SP that has access to the API. You can do that by issuing the following command: 
+```
+az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/<SUBSCRIPTION_ID>" --name="<NAME OF SP>"
+```
+* We currently need to SCP the kubeconfig file off of the master node so you need to provide k8s-claimer with the ssh key (private) used to setup your leasable clusters (this means they all need to be the same).
+* You cannot lease a cluster by version since the Azure API does not return the version of the API running.
+
+
 # Configuration
 This server is configured exclusively with environment variables. See below for a list and
 description of each.
@@ -233,7 +242,3 @@ This response code is returned when no lease exists with the given token.
 #### `200 OK`
 
 The lease was successfully deleted. The given token is no longer valid and should not be reused.
-
-
-## Azure Notes:
-* https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal
