@@ -8,14 +8,17 @@ import (
 	"strings"
 	"testing"
 
+	"k8s.io/client-go/pkg/api/v1"
+
 	"github.com/arschles/assert"
 	"github.com/deis/k8s-claimer/api"
-	"github.com/deis/k8s-claimer/gke"
+	"github.com/deis/k8s-claimer/config"
+	"github.com/deis/k8s-claimer/k8s"
+	"github.com/deis/k8s-claimer/providers/gke"
 	"github.com/deis/k8s-claimer/testutil"
 	"github.com/pborman/uuid"
 	container "google.golang.org/api/container/v1"
 	"gopkg.in/yaml.v2"
-	"k8s.io/client-go/pkg/api/v1"
 )
 
 var (
@@ -37,17 +40,10 @@ func newListClusterResp(clusters []*container.Cluster) *container.ListClustersRe
 	return resp
 }
 
-func newFakeClusterLister(resp *container.ListClustersResponse, err error) *gke.FakeClusterLister {
-	return &gke.FakeClusterLister{
-		Resp: resp,
-		Err:  err,
-	}
-}
-
 func TestCreateLeaseInvalidReq(t *testing.T) {
-	cl := newFakeClusterLister(nil, nil)
-	slu := newFakeServiceGetterUpdater(nil, nil, nil, nil)
-	hdl := CreateLease(cl, slu, "", "", "")
+	gkeClusterLister := gke.NewFakeClusterLister(nil, nil)
+	slu := k8s.NewFakeServiceGetterUpdater(nil, nil, nil, nil)
+	hdl := CreateLease(slu, "", gkeClusterLister, nil, nil, nil)
 	req, err := http.NewRequest("POST", "/lease", bytes.NewReader(nil))
 	assert.NoErr(t, err)
 	res := httptest.NewRecorder()
@@ -56,13 +52,14 @@ func TestCreateLeaseInvalidReq(t *testing.T) {
 }
 
 func TestCreateLeaseValidResp(t *testing.T) {
-	cluster := testutil.GetClusters()[0]
-	clusterLister := newFakeClusterLister(newListClusterResp([]*container.Cluster{cluster}), nil)
-	services := newFakeServiceGetterUpdater(&v1.Service{
+	cluster := testutil.GetGKEClusters()[0]
+	gkeClusterLister := gke.NewFakeClusterLister(newListClusterResp([]*container.Cluster{cluster}), nil)
+	services := k8s.NewFakeServiceGetterUpdater(&v1.Service{
 		ObjectMeta: v1.ObjectMeta{Name: "service1"},
 	}, nil, nil, nil)
-	hdl := CreateLease(clusterLister, services, "", "", "")
-	reqBody := `{"max_time":30}`
+	googleConfig := &config.Google{AccountFileJSON: "test", ProjectID: "proj1", Zone: "zone1"}
+	hdl := CreateLease(services, "", gkeClusterLister, nil, nil, googleConfig)
+	reqBody := `{"max_time":30, "cloud_provider": "google"}`
 	req, err := http.NewRequest("POST", "/lease", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "some awesome token")
 	assert.NoErr(t, err)
@@ -74,7 +71,7 @@ func TestCreateLeaseValidResp(t *testing.T) {
 	leaseResp := new(api.CreateLeaseResp)
 	assert.NoErr(t, json.NewDecoder(res.Body).Decode(leaseResp))
 
-	expectedKubeCfg, err := createKubeConfigFromCluster(expectedCluster)
+	expectedKubeCfg, err := k8s.CreateKubeConfigFromCluster(expectedCluster)
 	assert.NoErr(t, err)
 
 	expectedMarshalledKubeCfg, err := yaml.Marshal(expectedKubeCfg)

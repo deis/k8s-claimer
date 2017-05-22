@@ -4,7 +4,7 @@ import (
 	container "google.golang.org/api/container/v1"
 )
 
-// ClusterLister is an interface interface for listing GKE clusters. It has an adapter for the
+// ClusterLister is an interface for listing GKE clusters. It has an adapter for the
 // standard *(google.golang.org/api/container/v1).Service as well as a fake implementation,
 // to be used in unit tests. Use this as a parameter in your funcs so that they can be more
 // easily unit tested

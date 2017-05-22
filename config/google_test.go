@@ -10,12 +10,12 @@ import (
 	"github.com/deis/k8s-claimer/testutil"
 )
 
-func TestGoogleCloudAccountInfo(t *testing.T) {
+func TestGoogleAccountInfo(t *testing.T) {
 	fileLoc := filepath.Join(testutil.TestDataDir(), "google_account_info.json")
 	fileBytes, err := ioutil.ReadFile(fileLoc)
 	assert.NoErr(t, err)
 	encoded := base64.StdEncoding.EncodeToString(fileBytes)
-	f, err := GoogleCloudAccountInfo(encoded)
+	f, err := AccountInfo(encoded)
 	assert.NoErr(t, err)
 	assert.Equal(t, f.PrivateKeyID, "abc", "private key ID")
 	assert.Equal(t, f.PrivateKey, "def", "private key")

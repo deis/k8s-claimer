@@ -1,0 +1,11 @@
+{{- if .Values.config.ssh_key }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ssh-key
+  labels:
+    heritage: deis
+type: Opaque
+data:
+  id_rsa: {{ .Values.config.ssh_key }}
+{{- end }}

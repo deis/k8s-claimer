@@ -1,0 +1,96 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: k8s-claimer
+  labels:
+    heritage: deis
+  annotations:
+    component.deis.io/version: {{ .Values.image.tag }}
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: k8s-claimer
+  template:
+    metadata:
+      labels:
+        app: k8s-claimer
+    spec:
+      volumes:
+      - name: ssh-key
+        secret:
+          secretName: ssh-key
+      containers:
+      - name: k8s-claimer
+        image: quay.io/{{.Values.image.org}}/k8s-claimer:{{.Values.image.tag}}
+        imagePullPolicy: {{.Values.image.pull_policy}}
+        volumeMounts:
+        - name: ssh-key
+          mountPath: /root/.ssh
+        env:
+        - name: "BIND_PORT"
+          value: "{{.Values.config.bind_port}}"
+        - name: "BIND_HOST"
+          value: "{{ .Values.config.bind_host }}"
+        - name: "NAMESPACE"
+          value: "{{ .Values.config.namespace }}"
+        - name: "SERVICE_NAME"
+          value: "{{ .Values.config.service_name }}"
+        - name: "AUTH_TOKEN"
+          valueFrom:
+            secretKeyRef:
+              name: auth
+              key: token
+        {{- if .Values.config.google.account_file }}
+        - name: "GOOGLE_CLOUD_ACCOUNT_FILE"
+          valueFrom:
+            secretKeyRef:
+              name: gke-secret
+              key: account_file
+        - name: "GOOGLE_CLOUD_PROJECT_ID"
+          value: "{{ .Values.config.google.project_id }}"
+        {{- if .Values.config.google.zone }}
+        - name: "GOOGLE_CLOUD_ZONE"
+          value: "{{ .Values.config.google.zone }}"
+        {{- end }}
+        {{- end }}
+        {{- if .Values.config.azure.subscription_id }}
+        - name: "AZURE_CLIENT_ID"
+          value: "{{ .Values.config.azure.client_id }}"
+        - name: "AZURE_CLIENT_SECRET"
+          value: "{{ .Values.config.azure.client_secret }}"
+        - name: "AZURE_TENANT_ID"
+          value: "{{ .Values.config.azure.tenant_id }}"
+        - name: "AZURE_SUBSCRIPTION_ID"
+          value: "{{ .Values.config.azure.subscription_id }}"
+        {{- end}}
+        ports:
+        - containerPort: {{.Values.config.bind_port}}
+          name: http
+        {{- if or (.Values.limits_cpu) (.Values.limits_memory)}}
+        resources:
+          limits:
+          {{- if (.Values.limits_cpu) }}
+            cpu: {{.Values.limits_cpu}}
+          {{- end}}
+          {{- if (.Values.limits_memory) }}
+            memory: {{.Values.limits_memory}}
+          {{- end}}
+        {{- end}}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{.Values.config.bind_port}}
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: {{.Values.config.bind_port}}
+          initialDelaySeconds: 1
+          timeoutSeconds: 1

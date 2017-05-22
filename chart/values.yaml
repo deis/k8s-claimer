@@ -1,0 +1,23 @@
+image:
+  org: deisci
+  pull_policy: Always
+  tag: canary
+
+config:
+  bind_port: "8080"
+  bind_host: "0.0.0.0"
+  namespace: k8s-claimer
+  service_name: k8s-claimer
+  # auth_token: string that tokens must use to aquire and release leases
+
+  google:
+    # zone: Zone you would like to lease clusters from. Defaults to all zones (-).
+    # account_file: The JWT for the account that is not base64 encoded (we will do that for you)
+    # project_id: Project ID to lease clusters from
+
+  azure:
+    # client_id: The username of the service principle
+    # client_secret: The password of the service principle
+    # tenant_id: 
+    # subscription_id: The subscription id your clusters reside in
+    

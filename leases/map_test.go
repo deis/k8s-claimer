@@ -12,7 +12,7 @@ import (
 
 func TestParseMapFromAnnotations(t *testing.T) {
 	rawAnnotations := testutil.GetRawAnnotations(
-		testutil.GetClusters(),
+		testutil.GetGKEClusters(),
 		TimeFormat,
 		testutil.DefaultTimeFunc,
 		testutil.DefaultUUIDFunc,
@@ -27,7 +27,7 @@ func TestParseMapFromAnnotations(t *testing.T) {
 }
 
 func TestLeaseByClusterName(t *testing.T) {
-	leaseableClusters := testutil.GetClusters()
+	leaseableClusters := testutil.GetGKEClusters()
 	rawAnnotations := testutil.GetRawAnnotations(
 		leaseableClusters,
 		TimeFormat,
@@ -46,7 +46,7 @@ func TestLeaseByClusterName(t *testing.T) {
 
 func TestUUIDs(t *testing.T) {
 	rawAnnotations := testutil.GetRawAnnotations(
-		testutil.GetClusters(),
+		testutil.GetGKEClusters(),
 		TimeFormat,
 		testutil.DefaultTimeFunc,
 		testutil.DefaultUUIDFunc,
@@ -63,7 +63,7 @@ func TestUUIDs(t *testing.T) {
 }
 
 func TestCreateDeleteLease(t *testing.T) {
-	leaseableClusters := testutil.GetClusters()
+	leaseableClusters := testutil.GetGKEClusters()
 	rawAnnotations := testutil.GetRawAnnotations(
 		leaseableClusters,
 		TimeFormat,

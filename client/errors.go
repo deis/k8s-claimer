@@ -4,13 +4,15 @@ import (
 	"fmt"
 )
 
-type errInvalidStatusCode struct {
+// APIError is an error returned from the api
+type APIError struct {
 	endpoint string
 	code     int
+	message  string
 }
 
-func (e errInvalidStatusCode) Error() string {
-	return fmt.Sprintf("invalid status code for endpoing (%s): %d", e.endpoint, e.code)
+func (e APIError) Error() string {
+	return fmt.Sprintf("%s", e.message)
 }
 
 type errHTTPRequest struct {
@@ -19,7 +21,7 @@ type errHTTPRequest struct {
 }
 
 func (e errHTTPRequest) Error() string {
-	return fmt.Sprintf("error executing HTTP request on %s (%s)", e.endpoint, e.err)
+	return fmt.Sprintf("Error executing HTTP request on %s -- %s", e.endpoint, e.err)
 }
 
 type errEncoding struct {
@@ -27,7 +29,7 @@ type errEncoding struct {
 }
 
 func (e errEncoding) Error() string {
-	return fmt.Sprintf("Error encoding request body (%s)", e.err)
+	return fmt.Sprintf("Error encoding request body -- %s", e.err)
 }
 
 type errDecoding struct {
@@ -35,5 +37,5 @@ type errDecoding struct {
 }
 
 func (e errDecoding) Error() string {
-	return fmt.Sprintf("Error decoding response body (%s)", e.err)
+	return fmt.Sprintf("Error decoding response body -- %s", e.err)
 }

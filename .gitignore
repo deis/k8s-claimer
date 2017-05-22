@@ -3,6 +3,8 @@
 *.a
 *.so
 
+.DS_Store
+
 # Folders
 _obj
 _test
@@ -29,3 +31,4 @@ cli/bin
 k8s-claimer-cli
 kubeconfig.yaml
 _dist
+coverage.txt

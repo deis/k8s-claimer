@@ -1,9 +1,8 @@
 FROM alpine:3.4
 
-RUN apk add -U ca-certificates && rm -rf /var/cache/apk/*
+RUN apk add -U ca-certificates openssh bash && rm -rf /var/cache/apk/*
 
-COPY bin/boot /bin/boot
-
+COPY bin/ /bin/
 EXPOSE 8080
 
-CMD ["boot"]
+ENTRYPOINT ["start"]

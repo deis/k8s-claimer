@@ -12,7 +12,10 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/arschles/assert"
+	"github.com/deis/k8s-claimer/config"
 	"github.com/deis/k8s-claimer/htp"
+	"github.com/deis/k8s-claimer/k8s"
+	"github.com/deis/k8s-claimer/providers/gke"
 )
 
 func TestWithAuthValidToken(t *testing.T) {
@@ -21,18 +24,19 @@ func TestWithAuthValidToken(t *testing.T) {
 		Endpoint:   "192.168.1.1",
 		MasterAuth: &container.MasterAuth{},
 	}
-	clusterLister := newFakeClusterLister(&container.ListClustersResponse{
+	gkeClusterLister := gke.NewFakeClusterLister(&container.ListClustersResponse{
 		Clusters: []*container.Cluster{cluster},
 	}, nil)
-	services := newFakeServiceGetterUpdater(&v1.Service{
+	services := k8s.NewFakeServiceGetterUpdater(&v1.Service{
 		ObjectMeta: v1.ObjectMeta{Name: "service1"},
 	}, nil, nil, nil)
-	hdl := CreateLease(clusterLister, services, "", "", "")
+	googleConfig := &config.Google{AccountFileJSON: "test", ProjectID: "proj1", Zone: "zone1"}
+	hdl := CreateLease(services, "", gkeClusterLister, nil, nil, googleConfig)
 	createLeaseHandler := htp.MethodMux(map[htp.Method]http.Handler{htp.Post: hdl})
 
 	mux := http.NewServeMux()
 	mux.Handle("/lease", WithAuth("auth token", "Authorization", createLeaseHandler))
-	reqBody := `{"max_time":30}`
+	reqBody := `{"max_time":30, "cloud_provider":"google"}`
 	req, err := http.NewRequest("POST", "/lease", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "auth token")
 	assert.NoErr(t, err)
@@ -42,7 +46,8 @@ func TestWithAuthValidToken(t *testing.T) {
 }
 
 func TestWithAuthInvalidToken(t *testing.T) {
-	hdl := CreateLease(nil, nil, "", "", "")
+	googleConfig := &config.Google{AccountFileJSON: "test", ProjectID: "proj1", Zone: "zone1"}
+	hdl := CreateLease(nil, "", nil, nil, nil, googleConfig)
 	createLeaseHandler := htp.MethodMux(map[htp.Method]http.Handler{htp.Post: hdl})
 
 	mux := http.NewServeMux()

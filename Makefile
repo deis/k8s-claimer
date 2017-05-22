@@ -15,24 +15,27 @@ DEIS_APP_NAME ?= ${SHORT_NAME}
 DIST_DIR := _dist
 BINARY_NAME := k8s-claimer
 
+build: build-binary docker-build
+push: docker-push
+
 bootstrap:
-	${DEV_ENV_CMD} glide install
+	${DEV_ENV_CMD} glide install --strip-vendor
 
 glideup:
 	${DEV_ENV_CMD} glide up
 
-build:
-	${DEV_ENV_PREFIX} -e CGO_ENABLED=0 ${DEV_ENV_IMAGE} go build -a -installsuffix cgo ${LDFLAGS} -o rootfs/bin/boot
+build-binary:
+	${DEV_ENV_PREFIX} -e CGO_ENABLED=0 ${DEV_ENV_IMAGE} go build -a -installsuffix cgo ${LDFLAGS} -o rootfs/bin/server
+
+docker-build:
+	docker build ${DOCKER_BUILD_FLAGS} -t ${IMAGE} rootfs
+	docker tag ${IMAGE} ${MUTABLE_IMAGE}
 
 test:
 	${DEV_ENV_CMD} sh -c 'go test $$(glide nv)'
 
 test-cover:
 	${DEV_ENV_CMD} test-cover.sh
-
-docker-build:
-	docker build ${DOCKER_BUILD_FLAGS} -t ${IMAGE} rootfs
-	docker tag ${IMAGE} ${MUTABLE_IMAGE}
 
 .PHONY: deploy
 deploy:
@@ -41,13 +44,22 @@ deploy:
 
 build-cli-cross:
 	${DEV_ENV_CMD} gox -verbose ${LDFLAGS} -os="linux darwin " -arch="amd64 386" -output="${DIST_DIR}/${BINARY_NAME}-latest-{{.OS}}-{{.Arch}}" ./cli
-ifdef TRAVIS_TAG
-	${DEV_ENV_CMD} gox -verbose ${LDFLAGS} -os="linux darwin" -arch="amd64 386" -output="${DIST_DIR}/${TRAVIS_TAG}/${BINARY_NAME}-${TRAVIS_TAG}-{{.OS}}-{{.Arch}}" ./cli
-else
 	${DEV_ENV_CMD} gox -verbose ${LDFLAGS} -os="linux darwin" -arch="amd64 386" -output="${DIST_DIR}/${VERSION}/${BINARY_NAME}-${VERSION}-{{.OS}}-{{.Arch}}" ./cli
-endif
+
+docker-build-cli:
+	${DEV_ENV_CMD} go build ${LDFLAGS} -o k8s-claimer-cli ./cli
 
 build-cli:
 	go build ${LDFLAGS} -o k8s-claimer-cli ./cli
 
 dist: build-cli-cross
+
+install:
+	helm upgrade k8s-claimer chart --install --namespace k8sclaimer --set image.org=${IMAGE_PREFIX},image.tag=${VERSION},${ARGS}
+
+upgrade:
+	helm upgrade k8s-claimer chart --namespace k8sclaimer --set image.org=${IMAGE_PREFIX},image.tag=${VERSION},${ARGS}
+
+uninstall:
+	helm delete k8s-claimer --purge
+	
