@@ -1,5 +1,5 @@
-hash: 5556fb84059a707d5c43e3624797a781698510a5bef4e41604eb8404711809be
-updated: 2017-05-19T16:08:54.255448881-04:00
+hash: 8932af9e60ef8275c76e43fe34b3e057d700c16a8582bc3cbd9714a34f5e2856
+updated: 2017-05-22T16:26:31.908488523Z
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -24,8 +24,6 @@ imports:
   - autorest/validation
 - name: github.com/blang/semver
   version: 31b736133b98f26d5e078ec9eb591666edfd091f
-- name: github.com/bramvdbogaerde/go-scp
-  version: cc3200dd7ffece96591d67fd8b7c4f64f45dcf02
 - name: github.com/codegangsta/cli
   version: d70f47eeca3afd795160003bc6e28b001d60c67c
 - name: github.com/coreos/go-oidc
@@ -43,7 +41,7 @@ imports:
   - httputil
   - timeutil
 - name: github.com/davecgh/go-spew
-  version: 346938d642f2ec3594ed81d874461961cd0faa76
+  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
   - spew
 - name: github.com/dgrijalva/jwt-go
@@ -105,10 +103,6 @@ imports:
   version: f1f1a805ed361a0e078bb537e4ea78cd37dcf065
   subpackages:
   - codec
-- name: golang.org/x/crypto
-  version: 1f22c0103821b9390939b6776727195525381532
-  subpackages:
-  - ssh
 - name: golang.org/x/net
   version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
   subpackages:

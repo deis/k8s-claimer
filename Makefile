@@ -19,7 +19,7 @@ build: build-binary docker-build
 push: docker-push
 
 bootstrap:
-	${DEV_ENV_CMD} glide install
+	${DEV_ENV_CMD} glide install --strip-vendor
 
 glideup:
 	${DEV_ENV_CMD} glide up
@@ -45,6 +45,9 @@ deploy:
 build-cli-cross:
 	${DEV_ENV_CMD} gox -verbose ${LDFLAGS} -os="linux darwin " -arch="amd64 386" -output="${DIST_DIR}/${BINARY_NAME}-latest-{{.OS}}-{{.Arch}}" ./cli
 	${DEV_ENV_CMD} gox -verbose ${LDFLAGS} -os="linux darwin" -arch="amd64 386" -output="${DIST_DIR}/${VERSION}/${BINARY_NAME}-${VERSION}-{{.OS}}-{{.Arch}}" ./cli
+
+docker-build-cli:
+	${DEV_ENV_CMD} go build ${LDFLAGS} -o k8s-claimer-cli ./cli
 
 build-cli:
 	go build ${LDFLAGS} -o k8s-claimer-cli ./cli
